@@ -1,0 +1,538 @@
+$engine: 3
+$onesync: on
+name: Imperial City — Qbox Lean RP
+version: 1.0.0
+author: Imperial City Dev Team
+description: >-
+  Complete Qbox Lean roleplay recipe: ox stack, first-party qbx jobs and
+  criminal activities, qbx_properties housing, NPWD phone, Renewed-Banking,
+  plus the custom imperial_* suite (businesses, dispatch, MDT, fire & rescue,
+  gangs, turfs, crafting, drug labs, farming, black market, boosting, logging).
+
+variables:
+  # Set these in txAdmin's deployer UI. Never commit real secrets.
+  # {{serverName}}, {{maxClients}}, {{svLicense}}, {{dbConnectionString}},
+  # {{recipeName}}, {{recipeAuthor}}, {{recipeDescription}} are provided by txAdmin.
+
+tasks:
+  # ───────────────────────── Base files (this repository) ─────────────────────────
+  # IMPERIAL_RECIPE_REPO: replace with your fork of the imperial-city repository.
+  - action: download_github
+    src: https://github.com/YOUR_ORG/imperial-city
+    ref: main
+    dest: ./tmp/imperial
+
+  - action: move_path
+    src: ./tmp/imperial/recipes/server.cfg.template
+    dest: ./server.cfg
+  - action: move_path
+    src: ./tmp/imperial/recipes/permissions.cfg
+    dest: ./permissions.cfg
+  - action: move_path
+    src: ./tmp/imperial/recipes/voice.cfg
+    dest: ./voice.cfg
+  - action: move_path
+    src: ./tmp/imperial/recipes/ox.cfg
+    dest: ./ox.cfg
+  - action: move_path
+    src: ./tmp/imperial/recipes/economy.cfg
+    dest: ./economy.cfg
+  - action: move_path
+    src: ./tmp/imperial/recipes/misc.cfg
+    dest: ./misc.cfg
+  - action: move_path
+    src: ./tmp/imperial/recipes/myLogo.png
+    dest: ./myLogo.png
+
+  # Custom imperial suite + curated configs shipped by this repo
+  - action: move_path
+    src: ./tmp/imperial/resources/[custom]
+    dest: ./resources/[custom]
+
+  # ───────────────────────── Database ─────────────────────────
+  - action: connect_database
+
+  # Imperial migrations (ordered; ledger-guarded — see sql/000_ledger.sql)
+  - action: query_database
+    file: ./tmp/imperial/sql/000_ledger.sql
+  - action: query_database
+    file: ./tmp/imperial/sql/001_core.sql
+  - action: query_database
+    file: ./tmp/imperial/sql/002_businesses.sql
+  - action: query_database
+    file: ./tmp/imperial/sql/003_gangs.sql
+  - action: query_database
+    file: ./tmp/imperial/sql/004_turfs.sql
+  - action: query_database
+    file: ./tmp/imperial/sql/005_crafting.sql
+  - action: query_database
+    file: ./tmp/imperial/sql/006_drugs.sql
+  - action: query_database
+    file: ./tmp/imperial/sql/007_farming.sql
+  - action: query_database
+    file: ./tmp/imperial/sql/008_mdt.sql
+  - action: query_database
+    file: ./tmp/imperial/sql/009_fire.sql
+  - action: query_database
+    file: ./tmp/imperial/sql/010_blackmarket.sql
+  - action: query_database
+    file: ./tmp/imperial/sql/011_boosting.sql
+
+  # ───────────────────────── CFX defaults ─────────────────────────
+  - action: download_github
+    src: https://github.com/citizenfx/cfx-server-data
+    subpath: resources
+    dest: ./resources/[cfx-default]
+  - action: remove_path
+    path: ./resources/[cfx-default]/[gameplay]/chat
+
+  # ───────────────────────── OX stack ─────────────────────────
+  - action: download_file
+    path: ./tmp/ox_lib.zip
+    url: https://github.com/overextended/ox_lib/releases/latest/download/ox_lib.zip
+  - action: unzip
+    dest: ./resources/[ox]
+    src: ./tmp/ox_lib.zip
+
+  - action: download_file
+    path: ./tmp/oxmysql.zip
+    url: https://github.com/overextended/oxmysql/releases/latest/download/oxmysql.zip
+  - action: unzip
+    dest: ./resources/[ox]
+    src: ./tmp/oxmysql.zip
+
+  - action: download_file
+    path: ./tmp/ox_target.zip
+    url: https://github.com/overextended/ox_target/releases/latest/download/ox_target.zip
+  - action: unzip
+    dest: ./resources/[ox]
+    src: ./tmp/ox_target.zip
+
+  - action: download_file
+    path: ./tmp/ox_inventory.zip
+    url: https://github.com/overextended/ox_inventory/releases/latest/download/ox_inventory.zip
+  - action: unzip
+    dest: ./resources/[ox]
+    src: ./tmp/ox_inventory.zip
+
+  - action: download_file
+    path: ./tmp/ox_doorlock.zip
+    url: https://github.com/overextended/ox_doorlock/releases/latest/download/ox_doorlock.zip
+  - action: unzip
+    dest: ./resources/[ox]
+    src: ./tmp/ox_doorlock.zip
+
+  - action: download_github
+    dest: ./resources/[ox]/ox_fuel
+    ref: main
+    src: https://github.com/overextended/ox_fuel
+
+  # Imperial consolidated item catalogue overrides ox_inventory defaults
+  - action: copy_path
+    src: ./tmp/imperial/recipes/items.lua
+    dest: ./resources/[ox]/ox_inventory/data/items.lua
+    overwrite: true
+
+  # ───────────────────────── Qbox core ─────────────────────────
+  - action: download_file
+    path: ./tmp/qbx_core.zip
+    url: https://github.com/qbox-project/qbx_core/releases/latest/download/qbx_core.zip
+  - action: unzip
+    dest: ./resources/[qbx]
+    src: ./tmp/qbx_core.zip
+  - action: query_database
+    file: ./resources/[qbx]/qbx_core/qbx_core.sql
+
+  - action: download_file
+    path: ./tmp/qbx_vehicles.zip
+    url: https://github.com/qbox-project/qbx_vehicles/releases/latest/download/qbx_vehicles.zip
+  - action: unzip
+    dest: ./resources/[qbx]
+    src: ./tmp/qbx_vehicles.zip
+  - action: query_database
+    file: ./resources/[qbx]/qbx_vehicles/vehicles.sql
+
+  - action: download_file
+    path: ./tmp/qbx_spawn.zip
+    url: https://github.com/qbox-project/qbx_spawn/releases/latest/download/qbx_spawn.zip
+  - action: unzip
+    dest: ./resources/[qbx]
+    src: ./tmp/qbx_spawn.zip
+
+  - action: download_file
+    path: ./tmp/qbx_smallresources.zip
+    url: https://github.com/qbox-project/qbx_smallresources/releases/latest/download/qbx_smallresources.zip
+  - action: unzip
+    dest: ./resources/[qbx]
+    src: ./tmp/qbx_smallresources.zip
+
+  - action: download_file
+    path: ./tmp/qbx_density.zip
+    url: https://github.com/Qbox-project/qbx_density/releases/latest/download/qbx_density.zip
+  - action: unzip
+    dest: ./resources/[qbx]
+    src: ./tmp/qbx_density.zip
+
+  - action: download_file
+    path: ./tmp/qbx_hud.zip
+    url: https://github.com/qbox-project/qbx_hud/releases/latest/download/qbx_hud.zip
+  - action: unzip
+    dest: ./resources/[qbx]
+    src: ./tmp/qbx_hud.zip
+
+  - action: download_file
+    path: ./tmp/qbx_adminmenu.zip
+    url: https://github.com/qbox-project/qbx_adminmenu/releases/latest/download/qbx_adminmenu.zip
+  - action: unzip
+    dest: ./resources/[qbx]
+    src: ./tmp/qbx_adminmenu.zip
+
+  - action: download_file
+    path: ./tmp/qbx_management.zip
+    url: https://github.com/qbox-project/qbx_management/releases/latest/download/qbx_management.zip
+  - action: unzip
+    dest: ./resources/[qbx]
+    src: ./tmp/qbx_management.zip
+
+  - action: download_file
+    path: ./tmp/qbx_garages.zip
+    url: https://github.com/qbox-project/qbx_garages/releases/latest/download/qbx_garages.zip
+  - action: unzip
+    dest: ./resources/[qbx]
+    src: ./tmp/qbx_garages.zip
+
+  - action: waste_time
+    seconds: 10
+
+  - action: download_github
+    dest: ./resources/[qbx]/qbx_vehicleshop
+    ref: main
+    src: https://github.com/qbox-project/qbx_vehicleshop
+  - action: query_database
+    file: ./resources/[qbx]/qbx_vehicleshop/vehshop.sql
+
+  - action: download_github
+    dest: ./resources/[qbx]/qbx_vehiclesales
+    ref: main
+    src: https://github.com/qbox-project/qbx_vehiclesales
+
+  - action: download_file
+    path: ./tmp/qbx_customs.zip
+    url: https://github.com/qbox-project/qbx_customs/releases/latest/download/qbx_customs.zip
+  - action: unzip
+    dest: ./resources/[qbx]
+    src: ./tmp/qbx_customs.zip
+
+  - action: download_github
+    dest: ./resources/[qbx]/qbx_vehiclekeys
+    ref: main
+    src: https://github.com/qbox-project/qbx_vehiclekeys
+
+  - action: download_github
+    dest: ./resources/[qbx]/qbx_carwash
+    ref: main
+    src: https://github.com/qbox-project/qbx_carwash
+
+  - action: download_github
+    dest: ./resources/[qbx]/qbx_idcard
+    ref: main
+    src: https://github.com/Qbox-project/qbx_idcard
+
+  - action: download_github
+    dest: ./resources/[qbx]/qbx_radialmenu
+    ref: main
+    src: https://github.com/qbox-project/qbx_radialmenu
+
+  - action: download_github
+    dest: ./resources/[qbx]/qbx_scoreboard
+    ref: main
+    src: https://github.com/qbox-project/qbx_scoreboard
+
+  - action: download_github
+    dest: ./resources/[qbx]/qbx_seatbelt
+    ref: main
+    src: https://github.com/qbox-project/qbx_seatbelt
+
+  - action: download_github
+    dest: ./resources/[qbx]/qbx_binoculars
+    ref: main
+    src: https://github.com/qbox-project/qbx_binoculars
+
+  - action: download_github
+    dest: ./resources/[qbx]/qbx_cityhall
+    ref: main
+    src: https://github.com/qbox-project/qbx_cityhall
+
+  - action: waste_time
+    seconds: 10
+
+  # ───────────────────────── Medical / EMS / Police ─────────────────────────
+  - action: download_github
+    dest: ./resources/[qbx]/qbx_medical
+    ref: main
+    src: https://github.com/qbox-project/qbx_medical
+
+  - action: download_github
+    dest: ./resources/[qbx]/qbx_ambulancejob
+    ref: main
+    src: https://github.com/qbox-project/qbx_ambulancejob
+
+  - action: download_github
+    dest: ./resources/[qbx]/qbx_police
+    ref: main
+    src: https://github.com/qbox-project/qbx_police
+
+  - action: download_file
+    path: ./tmp/xt-prison.zip
+    url: https://github.com/xT-Development/xt-prison/releases/latest/download/xt-prison.zip
+  - action: unzip
+    dest: ./resources/[standalone]
+    src: ./tmp/xt-prison.zip
+
+  # ───────────────────────── Civilian jobs ─────────────────────────
+  - action: download_github
+    dest: ./resources/[civilian-jobs]/qbx_taxijob
+    ref: main
+    src: https://github.com/qbox-project/qbx_taxijob
+  - action: download_github
+    dest: ./resources/[civilian-jobs]/qbx_truckerjob
+    ref: main
+    src: https://github.com/qbox-project/qbx_truckerjob
+  - action: download_github
+    dest: ./resources/[civilian-jobs]/qbx_towjob
+    ref: main
+    src: https://github.com/qbox-project/qbx_towjob
+  - action: download_github
+    dest: ./resources/[civilian-jobs]/qbx_garbagejob
+    ref: main
+    src: https://github.com/qbox-project/qbx_garbagejob
+  - action: download_github
+    dest: ./resources/[civilian-jobs]/qbx_busjob
+    ref: main
+    src: https://github.com/qbox-project/qbx_busjob
+  - action: download_github
+    dest: ./resources/[civilian-jobs]/qbx_newsjob
+    ref: main
+    src: https://github.com/qbox-project/qbx_newsjob
+  - action: download_github
+    dest: ./resources/[civilian-jobs]/qbx_recyclejob
+    ref: main
+    src: https://github.com/qbox-project/qbx_recyclejob
+  - action: download_github
+    dest: ./resources/[civilian-jobs]/qbx_mechanicjob
+    ref: main
+    src: https://github.com/qbox-project/qbx_mechanicjob
+  - action: download_github
+    dest: ./resources/[civilian-jobs]/qbx_diving
+    ref: main
+    src: https://github.com/qbox-project/qbx_diving
+  - action: download_github
+    dest: ./resources/[civilian-jobs]/qbx_divegear
+    ref: main
+    src: https://github.com/qbox-project/qbx_divegear
+
+  - action: waste_time
+    seconds: 10
+
+  # ───────────────────────── Criminal activities ─────────────────────────
+  - action: download_github
+    dest: ./resources/[criminal]/qbx_storerobbery
+    ref: main
+    src: https://github.com/qbox-project/qbx_storerobbery
+  - action: download_github
+    dest: ./resources/[criminal]/qbx_bankrobbery
+    ref: main
+    src: https://github.com/qbox-project/qbx_bankrobbery
+  - action: download_github
+    dest: ./resources/[criminal]/qbx_truckrobbery
+    ref: main
+    src: https://github.com/qbox-project/qbx_truckrobbery
+  - action: download_github
+    dest: ./resources/[criminal]/qbx_houserobbery
+    ref: main
+    src: https://github.com/qbox-project/qbx_houserobbery
+  - action: download_github
+    dest: ./resources/[criminal]/qbx_jewelery
+    ref: main
+    src: https://github.com/qbox-project/qbx_jewelery
+  - action: download_github
+    dest: ./resources/[criminal]/qbx_pawnshop
+    ref: main
+    src: https://github.com/qbox-project/qbx_pawnshop
+  - action: download_github
+    dest: ./resources/[criminal]/qbx_scrapyard
+    ref: main
+    src: https://github.com/qbox-project/qbx_scrapyard
+  - action: download_github
+    dest: ./resources/[criminal]/qbx_drugs
+    ref: main
+    src: https://github.com/qbox-project/qbx_drugs
+  - action: download_github
+    dest: ./resources/[criminal]/qbx_weed
+    ref: main
+    src: https://github.com/qbox-project/qbx_weed
+  - action: download_github
+    dest: ./resources/[criminal]/qbx_streetraces
+    ref: main
+    src: https://github.com/qbox-project/qbx_streetraces
+  - action: download_github
+    dest: ./resources/[criminal]/qbx_lapraces
+    ref: main
+    src: https://github.com/qbox-project/qbx_lapraces
+  - action: download_github
+    dest: ./resources/[criminal]/qbx_vineyard
+    ref: main
+    src: https://github.com/qbox-project/qbx_vineyard
+
+  # Robbery minigames
+  - action: download_github
+    dest: ./resources/[standalone]/safecracker
+    ref: main
+    src: https://github.com/qbox-project/safecracker
+  - action: download_github
+    dest: ./resources/[standalone]/mhacking
+    ref: main
+    src: https://github.com/qbox-project/mhacking
+  - action: download_github
+    dest: ./resources/[standalone]/ultra-voltlab
+    ref: main
+    src: https://github.com/ultrahacx/ultra-voltlab
+
+  - action: waste_time
+    seconds: 10
+
+  # ───────────────────────── Housing ─────────────────────────
+  - action: download_github
+    dest: ./resources/[housing]/qbx_properties
+    ref: main
+    src: https://github.com/Qbox-project/qbx_properties
+
+  # ───────────────────────── Standalone / world ─────────────────────────
+  - action: download_github
+    dest: ./resources/[standalone]/bob74_ipl
+    ref: master
+    src: https://github.com/Bob74/bob74_ipl
+
+  - action: download_file
+    path: ./tmp/screencapture.zip
+    url: https://github.com/itschip/screencapture/releases/latest/download/screencapture.zip
+  - action: unzip
+    dest: ./resources/[standalone]/
+    src: ./tmp/screencapture.zip
+
+  - action: download_github
+    dest: ./resources/[standalone]/scully_emotemenu
+    ref: main
+    src: https://github.com/Scullyy/scully_emotemenu
+
+  - action: download_file
+    path: ./tmp/Renewed-Banking.zip
+    url: https://github.com/Renewed-Scripts/Renewed-Banking/releases/latest/download/Renewed-Banking.zip
+  - action: unzip
+    dest: ./resources/[standalone]
+    src: ./tmp/Renewed-Banking.zip
+
+  - action: download_file
+    path: ./tmp/illenium-appearance.zip
+    url: https://github.com/iLLeniumStudios/illenium-appearance/releases/latest/download/illenium-appearance.zip
+  - action: unzip
+    dest: ./resources/[appearance]
+    src: ./tmp/illenium-appearance.zip
+
+  - action: download_github
+    dest: ./resources/[standalone]/MugShotBase64
+    ref: main
+    src: https://github.com/BaziForYou/MugShotBase64
+    subpath: MugShotBase64
+  - action: download_file
+    url: https://raw.githubusercontent.com/BaziForYou/MugShotBase64/main/README.md
+    path: ./resources/[standalone]/MugShotBase64/README.md
+  - action: download_file
+    url: https://raw.githubusercontent.com/BaziForYou/MugShotBase64/main/LICENSE.md
+    path: ./resources/[standalone]/MugShotBase64/LICENSE.md
+
+  - action: download_file
+    path: ./tmp/loadscreen.zip
+    url: https://github.com/D4isDAVID/loadscreen/releases/latest/download/loadscreen.zip
+  - action: unzip
+    dest: ./resources/[standalone]
+    src: ./tmp/loadscreen.zip
+  - action: copy_path
+    src: ./myLogo.png
+    dest: ./resources/[standalone]/loadscreen/html/assets/logo.png
+    overwrite: true
+
+  - action: download_file
+    path: ./tmp/mana_audio.zip
+    url: https://github.com/Manason/mana_audio/releases/latest/download/mana_audio.zip
+  - action: unzip
+    dest: ./resources/[standalone]
+    src: ./tmp/mana_audio.zip
+
+  - action: download_file
+    path: ./tmp/Renewed-Weathersync.zip
+    url: https://github.com/Renewed-Scripts/Renewed-Weathersync/releases/latest/download/Renewed-Weathersync.zip
+  - action: unzip
+    dest: ./resources/[standalone]
+    src: ./tmp/Renewed-Weathersync.zip
+
+  - action: download_file
+    path: ./tmp/vehiclehandler.zip
+    url: https://github.com/QuantumMalice/vehiclehandler/releases/latest/download/vehiclehandler.zip
+  - action: unzip
+    dest: ./resources/[standalone]
+    src: ./tmp/vehiclehandler.zip
+
+  # ───────────────────────── Voice ─────────────────────────
+  - action: download_github
+    dest: ./resources/[voice]/pma-voice
+    ref: main
+    src: https://github.com/AvarianKnight/pma-voice
+
+  - action: download_github
+    dest: ./resources/[voice]/mm_radio
+    ref: main
+    src: https://github.com/qbox-project/mm_radio
+
+  # ───────────────────────── Phone (NPWD) ─────────────────────────
+  - action: download_file
+    path: ./tmp/npwd.zip
+    url: https://github.com/project-error/npwd/releases/latest/download/npwd.zip
+  - action: unzip
+    dest: ./resources/[phone]/
+    src: ./tmp/npwd.zip
+  - action: query_database
+    file: ./resources/[phone]/npwd/import.sql
+
+  - action: download_github
+    dest: ./resources/[phone]/qbx_npwd
+    ref: main
+    src: https://github.com/Qbox-project/qbx_npwd
+  - action: move_path
+    src: ./resources/[phone]/qbx_npwd/config.json
+    dest: ./resources/[phone]/npwd/config.json
+    overwrite: true
+
+  - action: download_file
+    path: ./tmp/npwd_qbx_garages.zip
+    url: https://github.com/Qbox-project/npwd_qbx_garages/releases/latest/download/npwd_qbx_garages.zip
+  - action: unzip
+    dest: ./resources/[phone]/[npwd-apps]
+    src: ./tmp/npwd_qbx_garages.zip
+
+  - action: download_file
+    path: ./tmp/npwd_qbx_mail.zip
+    url: https://github.com/Qbox-project/npwd_qbx_mail/releases/latest/download/npwd_qbx_mail.zip
+  - action: unzip
+    dest: ./resources/[phone]/[npwd-apps]
+    src: ./tmp/npwd_qbx_mail.zip
+
+  # ───────────────────────── Assets ─────────────────────────
+  - action: download_github
+    dest: ./resources/[maps]/pillbox
+    ref: main
+    src: https://github.com/Lorenc95/pillbox
+
+  # ───────────────────────── Clean up ─────────────────────────
+  - action: remove_path
+    path: ./tmp

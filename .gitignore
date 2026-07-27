@@ -1,0 +1,42 @@
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+.vscode/
+.idea/
+
+# Environment / secrets — never commit real values, only .env.example
+.env
+.env.local
+*.local.cfg
+
+# Node (if any tooling in this repo grows an npm dependency)
+node_modules/
+npm-debug.log*
+
+# Python (tools/ scripts)
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# txAdmin deploy scratch space (recipe writes here during a live deploy;
+# never meant to be committed from a checkout of this repository)
+tmp/
+resources/[cfx-default]/
+resources/[ox]/
+resources/[qbx]/
+resources/[standalone]/
+resources/[appearance]/
+resources/[voice]/
+resources/[phone]/
+resources/[housing]/
+resources/[civilian-jobs]/
+resources/[criminal]/
+resources/[maps]/
+server.cfg
+
+# Local database dumps / backups
+*.sql.bak
+*.sql.gz

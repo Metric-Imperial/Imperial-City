@@ -1,0 +1,26 @@
+Imperial City — Qbox Lean RP Recipe
+Copyright (C) 2026 Imperial City Dev Team
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+The full text of the GNU General Public License version 3 is available
+at: https://www.gnu.org/licenses/gpl-3.0.en.html
+
+This licence applies to the contents of this repository: the resources
+under resources/[custom]/, the SQL migrations under sql/, the tooling
+under tools/, the recipe and config files under recipes/, and the
+documentation under docs/. It does not apply to third-party resources
+downloaded by the txAdmin recipe from their own upstream sources — each
+of those is licensed under its own project's terms. See
+docs/22-licences-and-attribution.md for details.
