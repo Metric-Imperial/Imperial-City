@@ -1,16 +1,13 @@
 # Missing item images
 
-**80 of 166 catalogue items now have icons. 86 outstanding.**
-
-All 56 obtainable from `qbcore-framework/qb-inventory` (plus 3 name variants)
-have been imported. Everything below must be created.
+**90 of 166 catalogue items have icons. 76 outstanding.**
 
 ## Spec
 
 - **100x100 PNG, RGBA, transparent background**
 - Filename must exactly match the item name
-- Drop into `recipes/item-images/` -- NOT ox_inventory/web/images, which is
-  wiped on every deploy. The recipe merges the folder over ox_inventory's set.
+- Drop into `recipes/item-images/` -- NOT ox_inventory/web/images, which is wiped
+  on every deploy. The recipe merges the folder over ox_inventory's set.
 
 ## Base Qbox catalogue (19)
 
@@ -36,7 +33,7 @@ have been imported. Everything below must be created.
 | `empty_evidence_bag.png` | Empty Evidence Bag |
 | `filled_evidence_bag.png` | Filled Evidence Bag |
 
-## Imperial-authored (67)
+## Imperial-authored (57)
 
 | File | Item |
 |---|---|
@@ -55,9 +52,6 @@ have been imported. Everything below must be created.
 | `fertiliser.png` | Fertiliser |
 | `seed_wheat.png` | Wheat Seeds |
 | `seed_corn.png` | Corn Seeds |
-| `seed_tomato.png` | Tomato Seeds |
-| `seed_potato.png` | Seed Potatoes |
-| `seed_lettuce.png` | Lettuce Seeds |
 | `seed_orange.png` | Orange Sapling |
 | `seed_apple.png` | Apple Sapling |
 | `seed_coffee.png` | Coffee Seedling |
@@ -66,11 +60,6 @@ have been imported. Everything below must be created.
 | `seed_cotton.png` | Cotton Seeds |
 | `wheat.png` | Wheat |
 | `corn.png` | Corn |
-| `tomato.png` | Tomato |
-| `potato.png` | Potato |
-| `lettuce.png` | Lettuce |
-| `orange.png` | Orange |
-| `apple.png` | Apple |
 | `coffee_beans.png` | Coffee Beans |
 | `sugarcane.png` | Sugar Cane |
 | `herbs.png` | Fresh Herbs |
@@ -98,9 +87,7 @@ have been imported. Everything below must be created.
 | `packaging_materials.png` | Packaging Materials |
 | `product_package.png` | Packaged Product |
 | `lab_keycard.png` | Lab Keycard |
-| `fire_extinguisher_item.png` | Fire Extinguisher |
 | `breathing_apparatus.png` | Breathing Apparatus |
-| `rescue_tools.png` | Rescue Tools |
 | `fire_hose_nozzle.png` | Hose Nozzle |
 | `boost_tablet.png` | Boosting Tablet |
 | `scratched_vin.png` | Scratched VIN Plate |
