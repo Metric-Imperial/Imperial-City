@@ -18,7 +18,7 @@ tasks:
   # ───────────────────────── Base files (this repository) ─────────────────────────
   # IMPERIAL_RECIPE_REPO: replace with your fork of the imperial-city repository.
   - action: download_github
-    src: https://github.com/Metric-Imperial/Imperial-City
+    src: https://github.com/YOUR_ORG/imperial-city
     ref: main
     dest: ./tmp/imperial
 
@@ -367,10 +367,14 @@ tasks:
     dest: ./resources/[criminal]/qbx_drugs
     ref: main
     src: https://github.com/qbox-project/qbx_drugs
+  - action: query_database
+    file: ./resources/[criminal]/qbx_drugs/qbx_drugs.sql
   - action: download_github
     dest: ./resources/[criminal]/qbx_weed
     ref: main
     src: https://github.com/qbox-project/qbx_weed
+  - action: query_database
+    file: ./resources/[criminal]/qbx_weed/sql/qbx_weed.sql
   - action: download_github
     dest: ./resources/[criminal]/qbx_streetraces
     ref: main
@@ -379,6 +383,8 @@ tasks:
     dest: ./resources/[criminal]/qbx_lapraces
     ref: main
     src: https://github.com/qbox-project/qbx_lapraces
+  - action: query_database
+    file: ./resources/[criminal]/qbx_lapraces/qbx_lapraces.sql
   - action: download_github
     dest: ./resources/[criminal]/qbx_vineyard
     ref: main
@@ -406,6 +412,12 @@ tasks:
     dest: ./resources/[housing]/qbx_properties
     ref: main
     src: https://github.com/Qbox-project/qbx_properties
+  - action: query_database
+    file: ./resources/[housing]/qbx_properties/property.sql
+  - action: query_database
+    file: ./resources/[housing]/qbx_properties/property_garages.sql
+  - action: query_database
+    file: ./resources/[housing]/qbx_properties/decorations.sql
 
   # ───────────────────────── Standalone / world ─────────────────────────
   - action: download_github
@@ -431,6 +443,8 @@ tasks:
   - action: unzip
     dest: ./resources/[standalone]
     src: ./tmp/Renewed-Banking.zip
+  - action: query_database
+    file: ./resources/[standalone]/Renewed-Banking/Renewed-Banking.sql
 
   - action: download_file
     path: ./tmp/illenium-appearance.zip
@@ -438,6 +452,11 @@ tasks:
   - action: unzip
     dest: ./resources/[appearance]
     src: ./tmp/illenium-appearance.zip
+  # illenium-appearance ships a sql/ directory; exact filename could not be
+  # confirmed from this environment (GitHub API access blocked). Inspect
+  # ./resources/[appearance]/illenium-appearance/sql/ after deploy and add
+  # a query_database task here pointing at whatever .sql file(s) it contains
+  # if you plan to use its skin-saving feature. See docs/20-troubleshooting.md.
 
   - action: download_github
     dest: ./resources/[standalone]/MugShotBase64
