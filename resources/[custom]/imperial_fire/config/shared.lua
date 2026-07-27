@@ -1,5 +1,9 @@
 ImperialFire = {
-    job = 'fire', -- must exist in qbx_core shared jobs config, see docs/09-jobs.md
+    -- Registered automatically at runtime by server/main.lua via
+    -- qbx_core:CreateJob if it doesn't already exist -- no manual edit to
+    -- qbx_core/shared/jobs.lua needed. Define it there yourself if you want
+    -- different grades/pay; imperial_fire will then leave it alone.
+    job = 'fire',
 
     stations = {
         {

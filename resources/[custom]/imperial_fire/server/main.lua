@@ -4,6 +4,41 @@
 --- no server-side "fire entity" to sync), but progress, completion and
 --- rewards are decided here and here only.
 
+-- qbx_core ships no 'fire' job, and both imperial_fire and imperial_mdt key off
+-- job.name == ImperialFire.job. This used to be a manual edit to
+-- qbx_core/shared/jobs.lua that docs/09-jobs.md asked the operator to make --
+-- which meant a fresh deploy silently had no fire department at all: no errors,
+-- the job simply could not be assigned, so nothing here was reachable.
+--
+-- Register it at runtime instead. commitToFile is false on purpose: we re-register
+-- every start rather than rewriting a file qbx_core owns, so this survives
+-- qbx_core updates and redeploys. CreateJob also fires qbx_core's job-update
+-- events, so cityhall and clients pick it up without a restart.
+CreateThread(function()
+    if GetResourceState('qbx_core') ~= 'started' then return end
+
+    local existing = exports.qbx_core:GetJob(ImperialFire.job)
+    if existing then return end -- operator has defined it themselves; don't clobber
+
+    local ok, err = exports.qbx_core:CreateJob(ImperialFire.job, {
+        label = 'Fire & Rescue',
+        type = 'leo',
+        defaultDuty = false,
+        offDutyPay = false,
+        grades = {
+            [0] = { name = 'Probationary', payment = 60 },
+            [1] = { name = 'Firefighter', payment = 75 },
+            [2] = { name = 'Lieutenant', payment = 90 },
+            [3] = { name = 'Chief', isboss = true, bankAuth = true, payment = 110 },
+        },
+    }, false)
+
+    if not ok then
+        print(('[imperial_fire] failed to register the "%s" job: %s')
+            :format(ImperialFire.job, err or 'unknown error'))
+    end
+end)
+
 local incidents = {}     -- [id] = { type, coords, workRemaining, workTotal, priority, createdAt, lastProgressAt, dispatchCallId }
 local nextIncidentId = 0
 local onDutyFire = {}    -- [src] = true

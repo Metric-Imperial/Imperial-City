@@ -2,28 +2,40 @@
 
 ## Framework jobs (qbx_core `shared/jobs.lua`)
 qbx_core ships its own default job set (unemployed, police, ambulance, etc).
-This recipe requires one **addition** the operator must make to qbx_core's
-job config before first start: a `fire` job entry (grades 0–3), since
-`imperial_fire` and `imperial_mdt` both key off `job.name == 'fire'`. This is
-config, not framework-core editing — it is the same file server owners edit
-to add any custom job, and Qbox's own docs treat `shared/jobs.lua` as an
-operator-owned config surface.
+This recipe adds one job on top: `fire`, since `imperial_fire` and
+`imperial_mdt` both key off `job.name == 'fire'`.
+
+**No manual edit is required.** `imperial_fire/server/main.lua` registers the
+job at startup via `exports.qbx_core:CreateJob`, with `commitToFile = false` —
+it re-registers each start rather than rewriting a file qbx_core owns. That
+survives qbx_core updates and full redeploys, and `CreateJob` fires qbx_core's
+job-update events so cityhall and connected clients pick it up immediately.
+
+Registered grades:
 
 ```lua
--- add to qbx_core/shared/jobs.lua
 fire = {
     label = 'Fire & Rescue',
-    type = 'leo', -- or 'none', per your onesync/queue priority needs
+    type = 'leo',
     defaultDuty = false,
     offDutyPay = false,
     grades = {
         [0] = { name = 'Probationary', payment = 60 },
         [1] = { name = 'Firefighter', payment = 75 },
-        [2] = { name = 'Lieutenant', payment = 90, isboss = false },
-        [3] = { name = 'Chief', payment = 110, isboss = true },
+        [2] = { name = 'Lieutenant', payment = 90 },
+        [3] = { name = 'Chief', isboss = true, bankAuth = true, payment = 110 },
     },
 },
 ```
+
+To use different grades or pay, define `fire` in `qbx_core/shared/jobs.lua`
+yourself — `imperial_fire` checks `GetJob` first and will not overwrite an
+existing definition.
+
+> Earlier revisions of this document asked the operator to hand-add this job.
+> That was a silent trap: a fresh deploy that skipped the step had no fire
+> department at all and no error to say why — the job simply could not be
+> assigned, so nothing in `imperial_fire` was reachable.
 
 ## First-party civilian jobs (qbx_*)
 taxi, trucker, tow, garbage, bus, news, recycle, mechanic, diving — installed
