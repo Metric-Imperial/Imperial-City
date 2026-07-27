@@ -18,7 +18,7 @@ tasks:
   # ───────────────────────── Base files (this repository) ─────────────────────────
   # IMPERIAL_RECIPE_REPO: replace with your fork of the imperial-city repository.
   - action: download_github
-    src: https://github.com/YOUR_ORG/imperial-city
+    src: https://github.com/Metric-Imperial/Imperial-City
     ref: main
     dest: ./tmp/imperial
 
