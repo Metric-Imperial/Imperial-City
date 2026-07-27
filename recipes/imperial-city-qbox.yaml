@@ -138,6 +138,19 @@ tasks:
     dest: ./resources/[ox]/ox_inventory/data/items.lua
     overwrite: true
 
+  # Item icons. ox_inventory's release ships only ~197 PNGs and the catalogue
+  # above defines 166 items, most of which have no matching art -- including
+  # every imperial-authored item, which no upstream pack will ever carry.
+  # Anything dropped in recipes/item-images/ is merged over ox_inventory's own
+  # set here. This MUST stay, otherwise hand-made icons are destroyed on the
+  # next deploy when ox_inventory is re-downloaded.
+  # Spec: 100x100 PNG, RGBA/transparent, filename == item name.
+  # See docs/missing-images.md for the outstanding list.
+  - action: copy_path
+    src: ./tmp/imperial/recipes/item-images
+    dest: ./resources/[ox]/ox_inventory/web/images
+    overwrite: true
+
   # ───────────────────────── Qbox core ─────────────────────────
   - action: download_file
     path: ./tmp/qbx_core.zip
