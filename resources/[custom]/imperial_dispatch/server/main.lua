@@ -20,8 +20,10 @@ local function refreshDuty()
 end
 
 -- keep duty map fresh on the events qbx_core fires; also poll as a safety net
-RegisterNetEvent('QBCore:Server:SetDuty', function() SetTimeout(200, refreshDuty) end)
-AddEventHandler('QBCore:Server:OnPlayerLoaded', function() SetTimeout(500, refreshDuty) end)
+-- SetDuty is emitted locally by qbx_core (TriggerEvent) -> AddEventHandler.
+-- OnPlayerLoaded is emitted by the client (TriggerServerEvent) -> RegisterNetEvent.
+AddEventHandler('QBCore:Server:SetDuty', function() SetTimeout(200, refreshDuty) end)
+RegisterNetEvent('QBCore:Server:OnPlayerLoaded', function() SetTimeout(500, refreshDuty) end)
 AddEventHandler('playerDropped', function() SetTimeout(200, refreshDuty) end)
 CreateThread(function()
     while true do Wait(30000) refreshDuty() end

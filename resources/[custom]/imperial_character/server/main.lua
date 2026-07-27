@@ -41,12 +41,17 @@ local function grantStarterPackage(source, citizenid)
     TriggerClientEvent('imperial_character:client:firstLogin', source)
 end
 
-AddEventHandler('QBCore:Server:OnPlayerLoaded', function(source)
-    local player = exports.qbx_core:GetPlayer(source)
+-- qbx_core only ever emits this from the client (TriggerServerEvent in
+-- qbx_core/client/character.lua), so it must be a net event here. With
+-- AddEventHandler the trigger is rejected ("was not safe for net") and the
+-- starter package is never granted.
+RegisterNetEvent('QBCore:Server:OnPlayerLoaded', function()
+    local src = source
+    local player = exports.qbx_core:GetPlayer(src)
     if not player then return end
     local citizenid = player.PlayerData.citizenid
-    ACTIVE[source] = citizenid
-    grantStarterPackage(source, citizenid)
+    ACTIVE[src] = citizenid
+    grantStarterPackage(src, citizenid)
 end)
 
 AddEventHandler('QBCore:Server:OnPlayerUnload', function(source)

@@ -67,7 +67,6 @@ ensure mapmanager
 ensure chat
 ensure spawnmanager
 ensure sessionmanager
-stop basic-gamemode
 ensure hardcap
 ensure baseevents
 
@@ -86,7 +85,17 @@ ensure [qbx]
 ensure [standalone]
 ensure [appearance]
 ensure [voice]
-ensure [maps]
+# Do NOT use `ensure [maps]` here. Resource-category names are matched by folder
+# name anywhere in the tree, and cfx-server-data ships its own
+# [cfx-default]/[gamemodes]/[maps]/ -- so `ensure [maps]` also started
+# fivem-map-hipster/fivem-map-skater, which declare
+# `resource_type 'map' { gameTypes = { ['basic-gamemode'] = true } }` and
+# therefore dragged in the Freeroam gametype. basic-gamemode then calls
+# spawnmanager:setAutoSpawn(true) + forceRespawn() on onClientMapStart, which
+# fights qbx_core's multicharacter spawn flow. Start our map explicitly instead.
+# (The old `stop basic-gamemode` above was a no-op: it ran before the resource
+# had been started, so it stopped nothing.)
+ensure pillbox
 
 # Tier 4: phone
 ensure qbx_npwd

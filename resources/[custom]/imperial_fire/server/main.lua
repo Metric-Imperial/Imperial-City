@@ -29,7 +29,9 @@ local function refreshDuty()
         end
     end
 end
-RegisterNetEvent('QBCore:Server:SetDuty', function() SetTimeout(200, refreshDuty) end)
+-- qbx_core emits SetDuty locally (TriggerEvent), so AddEventHandler is correct;
+-- RegisterNetEvent here would also let any client trigger it remotely.
+AddEventHandler('QBCore:Server:SetDuty', function() SetTimeout(200, refreshDuty) end)
 AddEventHandler('playerDropped', function() SetTimeout(200, refreshDuty) end)
 CreateThread(function() while true do Wait(30000) refreshDuty() end end)
 
@@ -175,8 +177,9 @@ lib.callback.register('imperial_fire:toggleDuty', function(src)
 end)
 
 -- sync existing incidents to a unit that just came on duty
-RegisterNetEvent('QBCore:Server:SetDuty', function()
-    local src = source
+-- Local event: qbx_core passes the player source as the first argument, so read
+-- it from the parameter -- the ambient `source` global is not set for these.
+AddEventHandler('QBCore:Server:SetDuty', function(src)
     SetTimeout(400, function()
         if onDutyFire[src] then
             for _, incident in pairs(incidents) do

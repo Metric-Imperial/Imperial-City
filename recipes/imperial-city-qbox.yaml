@@ -16,9 +16,12 @@ variables:
 
 tasks:
   # ───────────────────────── Base files (this repository) ─────────────────────────
-  # IMPERIAL_RECIPE_REPO: replace with your fork of the imperial-city repository.
+  # IMPERIAL_RECIPE_REPO: this must point at the repo that hosts this recipe.
+  # Do NOT let it revert to the YOUR_ORG placeholder -- the deploy dies on this
+  # first task if it does (commit 6e78f54 reintroduced the placeholder by
+  # re-uploading a local folder that still had it).
   - action: download_github
-    src: https://github.com/YOUR_ORG/imperial-city
+    src: https://github.com/Metric-Imperial/Imperial-City
     ref: main
     dest: ./tmp/imperial
 
@@ -77,6 +80,8 @@ tasks:
     file: ./tmp/imperial/sql/010_blackmarket.sql
   - action: query_database
     file: ./tmp/imperial/sql/011_boosting.sql
+  - action: query_database
+    file: ./tmp/imperial/sql/012_third_party_gaps.sql
 
   # ───────────────────────── CFX defaults ─────────────────────────
   - action: download_github
@@ -215,6 +220,8 @@ tasks:
     dest: ./resources/[qbx]/qbx_vehiclesales
     ref: main
     src: https://github.com/qbox-project/qbx_vehiclesales
+  - action: query_database
+    file: ./resources/[qbx]/qbx_vehiclesales/qbx_vehiclesales.sql
 
   - action: download_file
     path: ./tmp/qbx_customs.zip
@@ -452,11 +459,17 @@ tasks:
   - action: unzip
     dest: ./resources/[appearance]
     src: ./tmp/illenium-appearance.zip
-  # illenium-appearance ships a sql/ directory; exact filename could not be
-  # confirmed from this environment (GitHub API access blocked). Inspect
-  # ./resources/[appearance]/illenium-appearance/sql/ after deploy and add
-  # a query_database task here pointing at whatever .sql file(s) it contains
-  # if you plan to use its skin-saving feature. See docs/20-troubleshooting.md.
+  # Confirmed against a live deploy: sql/ contains exactly these four files.
+  # playerskins is NOT optional -- without it every character load throws on
+  # `SELECT skin FROM playerskins`, and appearance is never persisted.
+  - action: query_database
+    file: ./resources/[appearance]/illenium-appearance/sql/playerskins.sql
+  - action: query_database
+    file: ./resources/[appearance]/illenium-appearance/sql/player_outfits.sql
+  - action: query_database
+    file: ./resources/[appearance]/illenium-appearance/sql/player_outfit_codes.sql
+  - action: query_database
+    file: ./resources/[appearance]/illenium-appearance/sql/management_outfits.sql
 
   - action: download_github
     dest: ./resources/[standalone]/MugShotBase64
@@ -508,10 +521,15 @@ tasks:
     ref: main
     src: https://github.com/AvarianKnight/pma-voice
 
-  - action: download_github
-    dest: ./resources/[voice]/mm_radio
-    ref: main
-    src: https://github.com/qbox-project/mm_radio
+  # Must be the release zip, not `main`: the repo source has no built NUI, so a
+  # source checkout logs "Warning: UI has not been built" plus "could not find
+  # file `build/**`" and the radio has no usable interface.
+  - action: download_file
+    path: ./tmp/mm_radio.zip
+    url: https://github.com/Qbox-project/mm_radio/releases/latest/download/mm_radio.zip
+  - action: unzip
+    dest: ./resources/[voice]
+    src: ./tmp/mm_radio.zip
 
   # ───────────────────────── Phone (NPWD) ─────────────────────────
   - action: download_file

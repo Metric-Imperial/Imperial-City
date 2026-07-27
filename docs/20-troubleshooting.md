@@ -18,6 +18,78 @@ transient connection issue), check your MariaDB version is ≥ 10.9; older
 versions may not support the `CHECK (JSON_VALID(...))` constraint syntax
 used throughout.
 
+**Console shows `SCRIPT ERROR: ... unable to execute a query! Table 'X'
+doesn't exist` at boot, for a third-party (non-`imperial_*`) resource.**
+This means that resource ships its own SQL schema file that the recipe
+never ran — confirmed to have happened on first live deploy for
+`qbx_lapraces`, `qbx_weed`, `qbx_drugs`, `qbx_properties`, and
+`Renewed-Banking` (fixed in commit `3ee957b`; if you deployed from a repo
+snapshot predating that fix, pull the update and re-run those specific
+`query_database` tasks, or run the listed `.sql` files by hand against
+your database — they're idempotent `CREATE TABLE IF NOT EXISTS`, safe to
+run standalone). If a *different* resource throws this same error, it
+means that resource also ships a schema file the recipe doesn't yet cover:
+look in that resource's own downloaded folder under
+`resources/[category]/<resource>/` for a `.sql` file (root or a `sql/`
+subfolder), add a matching `query_database` task to
+`recipes/imperial-city-qbox.yaml` right after that resource's
+download/unzip task, and run it once by hand against the live database
+(no need to redeploy from scratch — the resource is already downloaded).
+
+**Console shows non-fatal `qbx_core` warnings**: `Table 'playerskins' /
+'player_mails' / 'player_outfits' does not exist ... please remove it
+from qbx_core/config/server.lua or create the table`.
+**Do not "fix" these by deleting the config lines — all three tables are
+genuinely required by resources this recipe ships.** An earlier revision of
+this document called them inert examples; the first live deploy disproved
+that:
+
+- `playerskins` and `player_outfits` are used by `illenium-appearance`,
+  which ships them in its own `sql/` directory (four files:
+  `playerskins.sql`, `player_outfits.sql`, `player_outfit_codes.sql`,
+  `management_outfits.sql`). Missing `playerskins` makes every character
+  load throw on `SELECT skin FROM playerskins`, and appearance is never
+  persisted — this was the cause of the black screen on first live deploy.
+- `player_mails` is used by `npwd_qbx_mail`, which ships **no** `.sql` file
+  at all, so there is nothing for a `query_database` task to point at. Its
+  schema now lives in this repo as `sql/012_third_party_gaps.sql`.
+
+All three now have `query_database` tasks in the recipe. On a deploy
+predating that, run the `.sql` files by hand — they are idempotent
+`CREATE TABLE IF NOT EXISTS`.
+
+**`mm_radio` starts with `Warning: UI has not been built`.**
+Fixed: the recipe now pulls the release zip
+(`releases/latest/download/mm_radio.zip` — verified to be the correct asset
+name) via `download_file` + `unzip`, instead of `download_github` of `main`.
+A `main` checkout has no pre-built NUI, so it also logs `could not find file
+'build/**'` and the radio has no usable interface. If this warning appears
+again, the resource was pulled from source rather than a release.
+
+**Console shows `Started gametype Freeroam` / `Started map fivem-map-skater`
+/ `Couldn't start resource redm-map-one`.**
+`server.cfg` is starting the wrong maps. Resource-category names are matched
+by folder name *anywhere* in the resources tree, and cfx-server-data ships
+its own `[cfx-default]/[gamemodes]/[maps]/` — so `ensure [maps]` matches that
+as well as ours, pulling in `fivem-map-hipster`/`fivem-map-skater`. Those
+declare `resource_type 'map' { gameTypes = { ['basic-gamemode'] = true } }`,
+which makes mapmanager start the Freeroam gametype, whose client script calls
+`spawnmanager:setAutoSpawn(true)` + `forceRespawn()` on `onClientMapStart` —
+directly against qbx_core's multicharacter spawn flow. Start our map by name
+(`ensure pillbox`) instead. Note a `stop basic-gamemode` line earlier in the
+cfg does *not* help: it runs before the resource has started, so it stops
+nothing.
+
+**A custom `imperial_*` server hook silently never runs, and the console
+shows `event QBCore:Server:OnPlayerLoaded was not safe for net`.**
+That event is emitted only from the *client* (`TriggerServerEvent` in
+`qbx_core/client/character.lua`), so a handler must use `RegisterNetEvent`;
+with `AddEventHandler` the trigger is rejected and the handler never fires.
+The inverse applies to `QBCore:Server:SetDuty` and
+`QBCore:Server:OnPlayerUnload`, which qbx_core emits locally via
+`TriggerEvent` — those want `AddEventHandler`, and they receive the player
+source as the **first argument**, not via the ambient `source` global.
+
 **A third-party `download_file`/`download_github` task 404s or times out.**
 This recipe pulls every third-party resource from its own upstream source
 at deploy time rather than vendoring it, which means a renamed repo, a
