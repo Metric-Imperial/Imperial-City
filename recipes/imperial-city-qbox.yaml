@@ -269,6 +269,23 @@ tasks:
     dest: ./resources/[qbx]/qbx_cityhall
     ref: main
     src: https://github.com/qbox-project/qbx_cityhall
+  # Drop the jobs we don't install from the employment menu. Without this a
+  # player could still take 'taxi' or 'reporter' and end up holding a job with
+  # no resource behind it. Surgical replace_string rather than shipping a whole
+  # curated config, so upstream cityhall changes still come through.
+  # NOTE: if these ever stop matching, the deploy still succeeds and the menu
+  # silently keeps the entry -- re-check these two strings after a qbx_cityhall
+  # update. `mechanic` needs no entry here; cityhall never offered it.
+  - action: replace_string
+    mode: literal
+    file: ./resources/[qbx]/qbx_cityhall/config/shared.lua
+    search: "taxi = 'Taxi',"
+    replace: "-- taxi: not installed by the imperial-city recipe"
+  - action: replace_string
+    mode: literal
+    file: ./resources/[qbx]/qbx_cityhall/config/shared.lua
+    search: "reporter = 'News Reporter',"
+    replace: "-- reporter: not installed by the imperial-city recipe"
 
   - action: waste_time
     seconds: 10
@@ -297,10 +314,12 @@ tasks:
     src: ./tmp/xt-prison.zip
 
   # ───────────────────────── Civilian jobs ─────────────────────────
-  - action: download_github
-    dest: ./resources/[civilian-jobs]/qbx_taxijob
-    ref: main
-    src: https://github.com/qbox-project/qbx_taxijob
+  # Deliberately NOT installed: qbx_taxijob, qbx_newsjob, qbx_mechanicjob.
+  # Dropped after live testing — too many upstream issues to be worth carrying.
+  # The matching entries are also removed from qbx_cityhall's employment menu
+  # further down (see the replace_string task), so players cannot take a job
+  # whose resource no longer exists. The job rows themselves still exist in
+  # qbx_core/shared/jobs.lua; that is harmless, since nothing routes to them.
   - action: download_github
     dest: ./resources/[civilian-jobs]/qbx_truckerjob
     ref: main
@@ -318,17 +337,9 @@ tasks:
     ref: main
     src: https://github.com/qbox-project/qbx_busjob
   - action: download_github
-    dest: ./resources/[civilian-jobs]/qbx_newsjob
-    ref: main
-    src: https://github.com/qbox-project/qbx_newsjob
-  - action: download_github
     dest: ./resources/[civilian-jobs]/qbx_recyclejob
     ref: main
     src: https://github.com/qbox-project/qbx_recyclejob
-  - action: download_github
-    dest: ./resources/[civilian-jobs]/qbx_mechanicjob
-    ref: main
-    src: https://github.com/qbox-project/qbx_mechanicjob
   - action: download_github
     dest: ./resources/[civilian-jobs]/qbx_diving
     ref: main

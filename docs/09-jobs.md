@@ -38,11 +38,24 @@ existing definition.
 > assigned, so nothing in `imperial_fire` was reachable.
 
 ## First-party civilian jobs (qbx_*)
-taxi, trucker, tow, garbage, bus, news, recycle, mechanic, diving — installed
+trucker, tow, garbage, bus, recycle, diving — installed
 from Qbox-project. Each is configured independently per its own upstream
 config; economy alignment is via the `imperial:econ:pay:*` convars in
 `economy.cfg` where the job supports convar overrides, otherwise its own
 config file.
+
+**Deliberately not installed:** `qbx_taxijob`, `qbx_newsjob`,
+`qbx_mechanicjob` — dropped after live testing, too many upstream issues to be
+worth carrying. Their download tasks are gone from the recipe, and `taxi` /
+`reporter` are stripped from qbx_cityhall's employment menu by `replace_string`
+so nobody can take a job with no resource behind it. The rows remain in
+`qbx_core/shared/jobs.lua`, which is harmless — nothing routes to them.
+
+Note that removing `qbx_mechanicjob` does **not** remove mechanic gameplay:
+`imperial_businesses` ships Benny's Original Motorworks as a player-owned
+business (`type = 'mechanic'`) with its own employment, duty, storage and
+fabrication bench. That `type` is an imperial_businesses category label and has
+no dependency on the qbx_core `mechanic` job.
 
 ## Imperial side jobs (session-based, no job-state change)
 See `imperial_sidejobs` README: fishing, mining, lumber, construction,
