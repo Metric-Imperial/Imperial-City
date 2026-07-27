@@ -4,12 +4,21 @@
 <meta charset="UTF-8" />
 <title>Imperial MDT</title>
 <style>
-  :root { color-scheme: dark; }
+  /* A NUI page composites over the game, so the root canvas MUST stay
+     transparent. Do NOT put `color-scheme: dark` on :root -- it makes CEF
+     paint the canvas opaque black, producing a full-screen black layer over
+     the game for as long as this resource is running. `background:
+     transparent` on body cannot undo it (the canvas colour comes from the
+     root element, not body), and `display: none` on body does not help
+     either, because the canvas is painted regardless of its contents.
+     Scope color-scheme to the panel so form controls stay dark. */
+  html, body { background: transparent; }
   * { box-sizing: border-box; }
   body {
     margin: 0; font-family: 'Segoe UI', Roboto, sans-serif;
-    background: transparent; color: #e7e9ec; display: none;
+    color: #e7e9ec; display: none;
   }
+  #app { color-scheme: dark; }
   body.visible { display: block; }
   #app {
     position: fixed; top: 6vh; left: 50%; transform: translateX(-50%);

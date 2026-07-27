@@ -1,5 +1,45 @@
 # 20 — Troubleshooting
 
+## Black screen with working UI
+
+**Symptom:** the loading screen displays correctly, then the multicharacter
+menu appears — but the world behind it is solid black. Audio works (traffic,
+NPC chatter). No Lua errors, no JS errors, clean server console.
+
+**Cause:** a NUI page whose *root canvas* is opaque. NUI composites over the
+game, so every NUI page must keep a transparent canvas. Declaring
+`color-scheme: dark` on `:root` (or setting any background on `html`) makes
+CEF paint the canvas opaque black, producing a full-screen black layer over
+the game for as long as that resource runs — whether or not its UI is ever
+opened.
+
+This bit `imperial_mdt` on the first live deploy. Two things make it
+especially hard to spot:
+
+- `body { background: transparent }` does **not** fix it. The canvas colour is
+  taken from the root element, not `body`.
+- `body { display: none }` does **not** fix it either. The canvas is painted
+  regardless of whether anything inside it is displayed.
+
+The engine reports nothing wrong, because nothing *is* wrong: the screen is
+faded in, collision is loaded, the ped is visible and alive, and the camera is
+rendering correctly. It is all just hidden behind a black web page. A giveaway
+is that `DrawText` debug output is invisible while another resource's NUI (for
+example ox_lib's menu) still shows — NUI layers draw above `DrawText`, so the
+offending page sits between the game and the menu.
+
+**Fix:**
+
+```css
+html, body { background: transparent; }
+#app { color-scheme: dark; }   /* scope it -- never put this on :root */
+```
+
+**Finding the culprit fast:** stop resources until the screen clears, then
+start them back one at a time until it goes black again. Only resources that
+declare `ui_page` in their manifest can do this:
+`grep -rl ui_page --include=fxmanifest.lua resources/`
+
 ## Deploy / installation
 
 **Recipe fails at the first `download_github` task.**
