@@ -87,10 +87,13 @@ local function spawnNodeProp(id, model, coords)
         onEnter = function()
             if nodeProps[id] then return end
             if not lib.requestModel(model, 10000) then return end
-            local obj = CreateObject(model, coords.x, coords.y, coords.z, false, false, false)
-            -- Collision has to be turned on explicitly. An object created this
-            -- way is non-colliding by default even when its model has bounds --
-            -- the rock rendered correctly but players walked straight through.
+            -- The last argument is `dynamic`. Passing false creates the object
+            -- without a physics instance, so it renders but nothing can touch
+            -- it -- players walked straight through the boulders even though
+            -- the models carry full collision. Create it dynamic so the physics
+            -- archetype is instanced, then freeze it in place so it behaves as
+            -- a static prop.
+            local obj = CreateObject(model, coords.x, coords.y, coords.z, false, false, true)
             SetEntityCollision(obj, true, true)
             SetEntityLoadCollisionFlag(obj, true)
             FreezeEntityPosition(obj, true)

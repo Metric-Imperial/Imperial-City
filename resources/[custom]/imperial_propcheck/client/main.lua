@@ -61,10 +61,10 @@ local function spawnProp(model)
     local c = GetEntityCoords(ped) + (fwd * 2.5)
 
     -- isNetwork = false, netMissionEntity = false -> local only.
-    current = CreateObject(hash, c.x, c.y, c.z, false, false, false)
-    -- Objects created this way do not collide until told to, even when the
-    -- model has bounds. Enable it so /prop reflects how the prop will actually
-    -- behave in place rather than looking right but being walk-through.
+    -- Last argument is `dynamic`. With false the object gets no physics
+    -- instance, so it renders but nothing can touch it. Create dynamic then
+    -- freeze, which is how a static-but-solid prop is made.
+    current = CreateObject(hash, c.x, c.y, c.z, false, false, true)
     SetEntityCollision(current, true, true)
     SetEntityLoadCollisionFlag(current, true)
     PlaceObjectOnGroundProperly(current)
