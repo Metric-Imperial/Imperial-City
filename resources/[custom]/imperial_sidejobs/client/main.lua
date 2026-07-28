@@ -91,8 +91,16 @@ local function settleOnGround(obj, model, coords, onSettled)
         for _ = 1, 150 do -- ~15s
             if not DoesEntityExist(obj) then return end
             if HasCollisionLoadedAroundEntity(obj) then
-                -- Probe from well above so the ray starts outside the terrain.
-                local found, groundZ = GetGroundZFor_3dCoord(coords.x, coords.y, coords.z + 25.0, false)
+                -- Probe from just above the configured point, not from high up.
+                -- GetGroundZFor_3dCoord returns the first surface *below* the
+                -- start height, so starting 25m up caught ledges and boulders
+                -- above the quarry floor -- every node landed higher than its
+                -- config Z (41.00 -> 42.82) and appeared to float. Start close,
+                -- and only sweep from high up if nothing is found nearby.
+                local found, groundZ = GetGroundZFor_3dCoord(coords.x, coords.y, coords.z + 1.5, false)
+                if not found then
+                    found, groundZ = GetGroundZFor_3dCoord(coords.x, coords.y, coords.z + 25.0, false)
+                end
                 if found then
                     -- min.z is the model's lowest point relative to its origin.
                     -- Subtracting it seats the base on the surface whether the
