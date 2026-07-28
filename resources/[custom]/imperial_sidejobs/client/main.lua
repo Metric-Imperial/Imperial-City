@@ -68,70 +68,19 @@ end)
 -- like a tree already reads as interactable).
 local nodeProps = {}
 
----Settle a prop onto the terrain once the ground beneath it actually exists.
+---Props are placed at exactly the configured coordinate. No runtime grounding.
 ---
----PlaceObjectOnGroundProperly only works when collision is loaded around the
----point. Props are spawned from 100m away, where it usually is not, so calling
----it immediately is a silent no-op and the prop hangs in mid-air at the
----configured Z. Retry until collision streams in, and only freeze afterwards --
----freezing first would pin it in the air permanently.
----Drop a prop onto the terrain.
+---Earlier versions tried PlaceObjectOnGroundProperly and then a
+---GetGroundZFor_3dCoord probe to auto-correct placement. Both were attempts to
+---rescue coordinates that were simply wrong -- the quarry nodes were configured
+---at z=41.00 where the terrain is actually 42.82, i.e. underground. Auto-
+---correction only moved the problem around and made the result unpredictable.
 ---
----PlaceObjectOnGroundProperly is unreliable here: it works off the object's own
----physics bounds, so a model with no embedded collision never moves. Probe the
----world for its surface height instead, which does not care what the prop is
----made of, and offset by the model's own base so it rests on the surface rather
----than sinking to its origin. PlaceObjectOnGroundProperly is kept only as a
----fallback for when the probe finds nothing.
----@param onSettled fun(coords: vector3) called once the prop has its final position
-local function settleOnGround(obj, model, coords, onSettled)
-    CreateThread(function()
-        local placed = false
-
-        for _ = 1, 150 do -- ~15s
-            if not DoesEntityExist(obj) then return end
-            if HasCollisionLoadedAroundEntity(obj) then
-                -- Probe from just above the configured point, not from high up.
-                -- GetGroundZFor_3dCoord returns the first surface *below* the
-                -- start height, so starting 25m up caught ledges and boulders
-                -- above the quarry floor -- every node landed higher than its
-                -- config Z (41.00 -> 42.82) and appeared to float. Start close,
-                -- and only sweep from high up if nothing is found nearby.
-                local found, groundZ = GetGroundZFor_3dCoord(coords.x, coords.y, coords.z + 1.5, false)
-                if not found then
-                    found, groundZ = GetGroundZFor_3dCoord(coords.x, coords.y, coords.z + 25.0, false)
-                end
-                if found then
-                    -- min.z is the model's lowest point relative to its origin.
-                    -- Subtracting it seats the base on the surface whether the
-                    -- origin sits at the centre or the bottom of the mesh.
-                    local min = GetModelDimensions(model)
-                    SetEntityCoords(obj, coords.x, coords.y, groundZ - min.z, false, false, false, false)
-                    placed = true
-                    break
-                end
-                PlaceObjectOnGroundProperly(obj)
-                placed = true
-                break
-            end
-            Wait(100)
-        end
-
-        if not DoesEntityExist(obj) then return end
-        FreezeEntityPosition(obj, true)
-
-        local final = GetEntityCoords(obj)
-        if not placed then
-            print(('[sidejobs] node prop never settled (collision never loaded) at %.1f %.1f %.1f')
-                :format(coords.x, coords.y, coords.z))
-        end
-        print(('[sidejobs] node prop: config z=%.2f -> placed z=%.2f'):format(coords.z, final.z))
-
-        if onSettled then onSettled(final) end
-    end)
-end
-
-local function spawnNodeProp(id, model, coords, onSettled)
+---Node coordinates are now captured in-game by standing on the spot and running
+---/nodehere (imperial_propcheck), which prints and copies the exact position.
+---A prop whose origin is at its base then sits correctly with no adjustment,
+---and the interaction sphere is guaranteed to be in the same place.
+local function spawnNodeProp(id, model, coords)
     lib.points.new({
         coords = coords,
         distance = 100.0,
@@ -139,12 +88,10 @@ local function spawnNodeProp(id, model, coords, onSettled)
             if nodeProps[id] then return end
             if not lib.requestModel(model, 10000) then return end
             local obj = CreateObject(model, coords.x, coords.y, coords.z, false, false, false)
+            FreezeEntityPosition(obj, true)
             SetEntityInvincible(obj, true)
-            nodeProps[id] = obj
-            -- Model stays requested until after settling: GetModelDimensions
-            -- needs it loaded to work out where the prop's base is.
-            settleOnGround(obj, model, coords, onSettled)
             SetModelAsNoLongerNeeded(model)
+            nodeProps[id] = obj
         end,
         onExit = function()
             if nodeProps[id] and DoesEntityExist(nodeProps[id]) then
@@ -161,7 +108,6 @@ end
 local function setupNodes(kind, positions, icon, label, anim, propModel, toolProp, tool)
     for index, pos in ipairs(positions) do
         local key = ('%s:%d'):format(kind, index)
-        local zoneId
 
         local option = {
             name = ('imperial_%s_%d'):format(kind, index),
@@ -202,29 +148,16 @@ local function setupNodes(kind, positions, icon, label, anim, propModel, toolPro
             end,
         }
 
-        local function placeZone(coords)
-            if zoneId then exports.ox_target:removeZone(zoneId) end
-            zoneId = exports.ox_target:addSphereZone({
-                coords = coords,
-                radius = 2.2,
-                options = { option },
-            })
-        end
-
-        -- Zone starts at the configured coordinate so no-prop nodes (lumber)
-        -- work as before. Where there IS a prop, the zone re-anchors to wherever
-        -- it actually settled.
-        --
-        -- The configured Z values were never ground-verified: the coal rock
-        -- visibly floated several metres up, which means these interaction
-        -- spheres have been hanging in mid-air the whole time. That is why nodes
-        -- could not be found without teleporting onto them. Re-anchoring makes
-        -- prop and zone self-correcting however wrong the config Z is.
-        placeZone(pos)
+        -- Prop and zone both sit on the configured coordinate, so they are in
+        -- the same place by construction. Capture coordinates with /nodehere
+        -- while standing on the spot rather than estimating them.
+        exports.ox_target:addSphereZone({
+            coords = pos,
+            radius = 2.2,
+            options = { option },
+        })
         if propModel then
-            spawnNodeProp(key, propModel, pos, function(settled)
-                if #(settled - pos) > 0.5 then placeZone(settled) end
-            end)
+            spawnNodeProp(key, propModel, pos)
         end
     end
 end

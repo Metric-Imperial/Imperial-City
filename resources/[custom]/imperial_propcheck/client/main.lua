@@ -138,6 +138,35 @@ end, false)
 RegisterCommand('propnext', function() cycle(1) end, false)
 RegisterCommand('propprev', function() cycle(-1) end, false)
 
+-- Capture a node coordinate by standing where you want it.
+--
+-- This exists because guessing coordinates does not work. The mining nodes were
+-- configured at z values that turned out to be below the terrain, and no amount
+-- of runtime ground-probing fixed that reliably -- it only hid the real problem.
+-- Standing on the spot and reading the position off the game is exact.
+--
+-- Prints the player's foot position, which is exactly where a prop whose origin
+-- sits at its base should be placed.
+RegisterCommand('nodehere', function()
+    local ped = cache.ped
+    local c = GetEntityCoords(ped)
+    -- GetEntityCoords returns the ped's root; subtract to get ground contact.
+    local _, groundZ = GetGroundZFor_3dCoord(c.x, c.y, c.z + 1.0, false)
+    local line = ('vec3(%.2f, %.2f, %.2f),'):format(c.x, c.y, groundZ ~= 0 and groundZ or c.z)
+
+    print('[propcheck] ' .. line)
+    print(('[propcheck]   ped z=%.2f  ground z=%.2f  heading=%.1f')
+        :format(c.z, groundZ or 0.0, GetEntityHeading(ped)))
+
+    lib.setClipboard(line)
+    lib.notify({
+        type = 'success',
+        title = 'Node coordinate copied',
+        description = line,
+        duration = 8000,
+    })
+end, false)
+
 AddEventHandler('onResourceStop', function(res)
     if res == cache.resource then deleteCurrent() end
 end)
