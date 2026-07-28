@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CMapTypes>
+  <extensions/>
+  <archetypes>
+    <Item type="CBaseArchetypeDef">
+      <lodDist value="200.00000000"/>
+      <flags value="32"/>
+      <specialAttribute value="0"/>
+      <bbMin x="-3.00000000" y="-3.00000000" z="-3.00000000"/>
+      <bbMax x="3.00000000" y="3.00000000" z="3.00000000"/>
+      <bsCentre x="0.00000000" y="0.00000000" z="0.00000000"/>
+      <bsRadius value="5.20000000"/>
+      <hdTextureDist value="100.00000000"/>
+      <name>coal_rock</name>
+      <textureDictionary>coal_rock</textureDictionary>
+      <clipDictionary/>
+      <drawableDictionary/>
+      <physicsDictionary/>
+      <assetType>ASSET_TYPE_DRAWABLE</assetType>
+      <assetName>coal_rock</assetName>
+      <extensions/>
+    </Item>
+  </archetypes>
+  <name>imperial_props</name>
+  <dependencies/>
+  <compositeEntityTypes/>
+</CMapTypes>

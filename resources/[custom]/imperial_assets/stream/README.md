@@ -19,16 +19,26 @@ purely for your own organisation — the game flattens them, so feel free to use
 | `<model>.ydr` | the model itself | yes |
 | `<model>.ytd` | its texture dictionary | usually |
 | `<model>.ybn` | separate collision | only if not embedded in the `.ydr` |
-| `<model>.ytyp` | archetype definition | only some packs — **see below** |
+| `<model>.ytyp` | archetype definition | **yes for any new prop** — see below |
 
 The **model name is the filename without the extension**. That is the string
 config takes, e.g. `nodeProp = \`my_rock_01\`` for `my_rock_01.ydr`.
 
-## If a pack includes a .ytyp
+## Every new prop needs a .ytyp
 
-A `.ytyp` defines archetypes and must be registered explicitly, or the props
-will not spawn — usually appearing invisible or as a missing model. Add to
-`imperial_assets/fxmanifest.lua`:
+A `.ydr` is only the model. For a **new** prop the game also needs an
+*archetype* — a record that the name exists, what asset backs it and what its
+bounds are. Without one the model never enters the game's index: nothing
+spawns and `/prop <name>` reports "Invalid model".
+
+This does **not** apply to a `.ydr` that *replaces* an existing game model —
+that archetype already exists. It is why every other stream folder in this
+server ships only `.ytd` texture replacements and declares no ytyp.
+
+The suite's archetypes live in one file, `stream/imperial_props.ytyp`, built
+from `_source/imperial_props.ytyp.xml`. Add new props as extra archetype
+entries in that XML rather than making a ytyp per model. It is registered in
+`imperial_assets/fxmanifest.lua` as:
 
 ```lua
 files {

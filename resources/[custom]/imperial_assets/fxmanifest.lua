@@ -11,6 +11,14 @@ description 'Shared streamed assets (props, textures, collision) for the imperia
 -- FiveM picks that folder up automatically, and streamed assets are global --
 -- every resource on the server can spawn these models, not just this one.
 
--- If an imported pack ships a .ytyp, register it here, e.g.:
---   files { 'stream/your_pack.ytyp' }
---   data_file 'DLC_ITYP_REQUEST' 'stream/your_pack.ytyp'
+-- A .ydr alone is not enough for a NEW prop: the game also needs an archetype
+-- declaring the name exists and what its bounds are. That lives in the .ytyp
+-- below, and without it the model never enters the game's index -- nothing
+-- spawns and IsModelInCdimage returns false. Source XML for it is in
+-- _source/imperial_props.ytyp.xml; add further props as extra archetype
+-- entries in that one file rather than creating a ytyp per model.
+files {
+    'stream/imperial_props.ytyp',
+}
+
+data_file 'DLC_ITYP_REQUEST' 'stream/imperial_props.ytyp'
