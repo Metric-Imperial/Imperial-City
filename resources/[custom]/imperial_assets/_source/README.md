@@ -29,20 +29,31 @@ In CodeWalker, same round trip you used for the `.ydr`:
 3. Put it in `imperial_assets/stream/`
 4. Restart `imperial_assets`, then `/prop coal_rock` to confirm
 
-## About the bounds in that file
+## Bounds must match the model exactly
 
-`bbMin` / `bbMax` / `bsRadius` are deliberately **generous** (±3m box, 5.2m
-sphere). Getting these wrong fails in one direction only:
+`bbMin` / `bbMax` / `bsCentre` / `bsRadius` **must be copied from the top of the
+model's own `.ydr.xml`**. They are not a culling hint and guessing them does not
+work.
 
-- **Too large** — harmless. Slightly less efficient culling, no visual defect.
-- **Too small** — the prop pops out of view at certain camera angles, because
-  the game culls it once the (wrong, small) bounds leave the frustum.
+`CreateObject` positions an object using its **archetype** bounds. A first
+version of this file used a deliberately generous ±3m box on the assumption that
+oversized was harmless. It is not: with `bbMin.z = -3`, every `coal_rock` spawned
+exactly 3 metres above where it was asked for, `GetModelDimensions` reported a
+6×6×6m object, and the rock appeared to float. That cost several rounds of
+chasing coordinates and collision, neither of which was ever the problem.
 
-So oversized values are the safe default when the real dimensions aren't known.
-If you would rather have exact ones, CodeWalker computes them for you: open the
-`.ydr` in **Project Window → New → YTYP → Add Archetype**, pick the drawable,
-and it fills the bounds from the actual geometry. Use that output instead of
-this file if you want it tight.
+For each model, copy these four lines out of its `.ydr.xml`:
+
+```xml
+<BoundingSphereCenter x="..." y="..." z="..." />   ->  bsCentre
+<BoundingSphereRadius value="..." />               ->  bsRadius
+<BoundingBoxMin x="..." y="..." z="..." />         ->  bbMin
+<BoundingBoxMax x="..." y="..." z="..." />         ->  bbMax
+```
+
+CodeWalker can also generate the archetype for you with the correct values:
+**Project Window → New → YTYP → Add Archetype**, pick the drawable, and it fills
+the bounds from the actual geometry.
 
 ## Adding more props later
 

@@ -6,10 +6,15 @@
       <lodDist value="200.00000000"/>
       <flags value="32"/>
       <specialAttribute value="0"/>
-      <bbMin x="-3.00000000" y="-3.00000000" z="-3.00000000"/>
-      <bbMax x="3.00000000" y="3.00000000" z="3.00000000"/>
-      <bsCentre x="0.00000000" y="0.00000000" z="0.00000000"/>
-      <bsRadius value="5.20000000"/>
+      <!-- MUST match the drawable's own bounds exactly (see the top of
+           coal_rock.ydr.xml). These are not a culling hint: CreateObject
+           positions an object using its ARCHETYPE bounds, so a bbMin.z of -3
+           lifts the prop 3 metres off the ground. That was the cause of the
+           "floating rock", not the coordinates and not the collision. -->
+      <bbMin x="-0.38458472" y="-0.36772310" z="0.00000000"/>
+      <bbMax x="0.30281680" y="0.38268262" z="0.84745860"/>
+      <bsCentre x="-0.04088396" y="0.00747976" z="0.42372930"/>
+      <bsRadius value="0.66215855"/>
       <hdTextureDist value="100.00000000"/>
       <name>coal_rock</name>
       <textureDictionary>coal_rock</textureDictionary>
