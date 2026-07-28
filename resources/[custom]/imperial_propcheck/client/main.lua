@@ -54,6 +54,17 @@ local function spawnProp(model)
         return false
     end
 
+    -- lib.requestModel does not request collision. Stock props already have
+    -- theirs resident from world streaming; a custom streamed model does not,
+    -- so without this it renders correctly but is walk-through.
+    RequestCollisionForModel(hash)
+    local deadline = GetGameTimer() + 10000
+    while not HasCollisionForModelLoaded(hash) and GetGameTimer() < deadline do
+        RequestCollisionForModel(hash)
+        Wait(0)
+    end
+    local collisionReady = HasCollisionForModelLoaded(hash)
+
     deleteCurrent()
 
     local ped = cache.ped
@@ -74,12 +85,14 @@ local function spawnProp(model)
 
     local s = modelSize(hash)
     lib.notify({
-        type = 'success',
+        type = collisionReady and 'success' or 'warning',
         title = currentModel,
-        description = ('%.2f x %.2f x %.2f m (w/d/h)'):format(s.x, s.y, s.z),
+        description = ('%.2f x %.2f x %.2f m (w/d/h)\ncollision: %s')
+            :format(s.x, s.y, s.z, collisionReady and 'loaded' or 'NOT LOADED'),
         duration = 7000,
     })
-    print(('[propcheck] %s  size %.2f x %.2f x %.2f m'):format(currentModel, s.x, s.y, s.z))
+    print(('[propcheck] %s  size %.2f x %.2f x %.2f m  collision=%s')
+        :format(currentModel, s.x, s.y, s.z, tostring(collisionReady)))
     return true
 end
 

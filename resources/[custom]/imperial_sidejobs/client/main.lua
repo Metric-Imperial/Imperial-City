@@ -80,13 +80,37 @@ local nodeProps = {}
 ---/nodehere (imperial_propcheck), which prints and copies the exact position.
 ---A prop whose origin is at its base then sits correctly with no adjustment,
 ---and the interaction sphere is guaranteed to be in the same place.
+---Load a model AND its collision.
+---
+---lib.requestModel only calls RequestModel/HasModelLoaded -- it never requests
+---collision. Stock props get away with that because the game already has their
+---collision resident from streaming the world; a custom streamed model does
+---not, so it renders perfectly and players walk straight through it. This was
+---the cause of the boulders being non-solid: not the export, not the archetype,
+---and not CreateObject.
+---@return boolean collisionReady
+local function requestModelWithCollision(model, timeout)
+    lib.requestModel(model, timeout or 10000)
+    RequestCollisionForModel(model)
+
+    local deadline = GetGameTimer() + (timeout or 10000)
+    while not HasCollisionForModelLoaded(model) and GetGameTimer() < deadline do
+        RequestCollisionForModel(model)
+        Wait(0)
+    end
+
+    return HasCollisionForModelLoaded(model)
+end
+
 local function spawnNodeProp(id, model, coords)
     lib.points.new({
         coords = coords,
         distance = 100.0,
         onEnter = function()
             if nodeProps[id] then return end
-            if not lib.requestModel(model, 10000) then return end
+            if not requestModelWithCollision(model, 10000) then
+                print(('[sidejobs] collision never loaded for node prop %s'):format(id))
+            end
             -- The last argument is `dynamic`. Passing false creates the object
             -- without a physics instance, so it renders but nothing can touch
             -- it -- players walked straight through the boulders even though
