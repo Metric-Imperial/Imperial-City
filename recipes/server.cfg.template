@@ -108,6 +108,9 @@ ensure [civilian-jobs]
 ensure [criminal]
 
 # Tier 6: imperial suite — logging first (shared base), dispatch before its consumers
+# Shared streamed assets first: props must be registered before anything
+# tries to spawn them.
+ensure imperial_assets
 ensure imperial_logging
 ensure imperial_character
 ensure imperial_dispatch
