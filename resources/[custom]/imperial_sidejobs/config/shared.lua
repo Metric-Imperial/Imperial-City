@@ -20,6 +20,10 @@ ImperialSideJobs = {
 
     -- ── Mining ──────────────────────────────────────────────────────────
     mining = {
+        -- Marker prop placed at every node so they are actually findable --
+        -- without one the target sphere sits on bare terrain and is invisible
+        -- unless you already know the coordinates. Set to nil for no prop.
+        nodeProp = `xs_terrain_rock_arena_1_01`,
         nodes = {
             vec3(2954.1, 2794.5, 41.0),
             vec3(2962.7, 2802.1, 40.6),
@@ -42,6 +46,10 @@ ImperialSideJobs = {
 
     -- ── Lumber ──────────────────────────────────────────────────────────
     lumber = {
+        -- nil because the logging camp has real trees at these coords; setting
+        -- a prop here would stack one on top of the existing geometry. Set a
+        -- model (e.g. `prop_tree_pine_02`) if the trees don't line up.
+        nodeProp = nil,
         trees = {
             vec3(-560.4, 5252.1, 70.5),
             vec3(-548.9, 5262.7, 72.1),

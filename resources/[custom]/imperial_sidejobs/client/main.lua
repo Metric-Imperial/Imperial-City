@@ -60,8 +60,44 @@ exports('useRod', function()
 end)
 
 -- ── Mining / Lumber nodes ───────────────────────────────────────────────
-local function setupNodes(kind, positions, icon, label, anim)
+
+-- Node marker props. Without one the target sphere sits on bare terrain and is
+-- effectively invisible -- you can only find a node by already knowing where it
+-- is. Streamed in/out with lib.points so we are not holding objects across the
+-- whole map. Pass nil to leave a node unmarked (e.g. where real world geometry
+-- like a tree already reads as interactable).
+local nodeProps = {}
+
+local function spawnNodeProp(id, model, coords)
+    lib.points.new({
+        coords = coords,
+        distance = 100.0,
+        onEnter = function()
+            if nodeProps[id] then return end
+            if not lib.requestModel(model, 10000) then return end
+            local obj = CreateObject(model, coords.x, coords.y, coords.z, false, false, false)
+            PlaceObjectOnGroundProperly(obj)
+            FreezeEntityPosition(obj, true)
+            SetEntityInvincible(obj, true)
+            SetModelAsNoLongerNeeded(model)
+            nodeProps[id] = obj
+        end,
+        onExit = function()
+            if nodeProps[id] and DoesEntityExist(nodeProps[id]) then
+                DeleteObject(nodeProps[id])
+            end
+            nodeProps[id] = nil
+        end,
+    })
+end
+
+---@param propModel? number marker prop placed at each node
+---@param toolProp? table prop held during the animation (ox_lib progressBar prop)
+local function setupNodes(kind, positions, icon, label, anim, propModel, toolProp)
     for index, pos in ipairs(positions) do
+        if propModel then
+            spawnNodeProp(('%s:%d'):format(kind, index), propModel, pos)
+        end
         exports.ox_target:addSphereZone({
             coords = pos,
             radius = 2.2,
@@ -80,6 +116,7 @@ local function setupNodes(kind, positions, icon, label, anim)
                             canCancel = true,
                             disable = { move = true, combat = true },
                             anim = anim,
+                            prop = toolProp,
                         })
                         if not finished then return end
                         local ok, extra = lib.callback.await('imperial_sidejobs:gather', false, kind, index)
@@ -103,10 +140,30 @@ local function setupNodes(kind, positions, icon, label, anim)
 end
 
 CreateThread(function()
+    -- bone 28422 = IK_R_Hand. pos/rot are the offsets that sit a long-handled
+    -- tool in the grip for the ground_attack_on_spot swing.
+    local pickaxeProp = {
+        model = `prop_tool_pickaxe`,
+        bone = 28422,
+        pos = vec3(0.0, -0.03, -0.02),
+        rot = vec3(-80.0, 0.0, 0.0),
+    }
+    local axeProp = {
+        model = `v_ind_cs_axe`,
+        bone = 28422,
+        pos = vec3(0.0, -0.03, -0.02),
+        rot = vec3(-80.0, 0.0, 0.0),
+    }
+
     setupNodes('mining', ImperialSideJobs.mining.nodes, 'fa-solid fa-hill-rockslide', 'Mine rock',
-        { dict = 'melee@large_wpn@streamed_core', clip = 'ground_attack_on_spot' })
+        { dict = 'melee@large_wpn@streamed_core', clip = 'ground_attack_on_spot' },
+        ImperialSideJobs.mining.nodeProp, pickaxeProp)
+    -- No marker prop for lumber: the logging camp already has real trees, so a
+    -- placed prop would double up. Set ImperialSideJobs.lumber.nodeProp if the
+    -- trees turn out not to line up with the node coords.
     setupNodes('lumber', ImperialSideJobs.lumber.trees, 'fa-solid fa-tree', 'Chop tree',
-        { dict = 'melee@large_wpn@streamed_core', clip = 'ground_attack_on_spot' })
+        { dict = 'melee@large_wpn@streamed_core', clip = 'ground_attack_on_spot' },
+        ImperialSideJobs.lumber.nodeProp, axeProp)
 
     -- blips
     for _, b in ipairs({ ImperialSideJobs.mining.blip, ImperialSideJobs.lumber.blip }) do
