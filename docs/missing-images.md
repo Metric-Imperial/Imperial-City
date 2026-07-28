@@ -1,13 +1,16 @@
 # Missing item images
 
-**90 of 166 catalogue items have icons. 76 outstanding.**
+**130 of 166 catalogue items have icons. 36 outstanding.**
+
+All imperial-authored items are complete. What remains is base Qbox catalogue
+art that neither ox_inventory nor qb-inventory ships.
 
 ## Spec
 
 - **100x100 PNG, RGBA, transparent background**
 - Filename must exactly match the item name
 - Drop into `recipes/item-images/` -- NOT ox_inventory/web/images, which is wiped
-  on every deploy. The recipe merges the folder over ox_inventory's set.
+  on every deploy.
 
 ## Base Qbox catalogue (19)
 
@@ -33,23 +36,10 @@
 | `empty_evidence_bag.png` | Empty Evidence Bag |
 | `filled_evidence_bag.png` | Filled Evidence Bag |
 
-## Imperial-authored (57)
+## Imperial-authored (17)
 
 | File | Item |
 |---|---|
-| `fishing_bait.png` | Fishing Bait |
-| `pickaxe.png` | Pickaxe |
-| `stone.png` | Stone |
-| `coal.png` | Coal |
-| `uncut_gem.png` | Uncut Gem |
-| `lumber_axe.png` | Felling Axe |
-| `log.png` | Timber Log |
-| `plank.png` | Timber Plank |
-| `hammer.png` | Hammer |
-| `security_case.png` | Secure Transport Case |
-| `watering_can.png` | Watering Can |
-| `farming_hoe.png` | Hoe |
-| `fertiliser.png` | Fertiliser |
 | `seed_wheat.png` | Wheat Seeds |
 | `seed_corn.png` | Corn Seeds |
 | `seed_orange.png` | Orange Sapling |
@@ -67,30 +57,3 @@
 | `flour.png` | Flour |
 | `sugar.png` | Sugar |
 | `produce_box.png` | Produce Box |
-| `toolkit.png` | Toolkit |
-| `component_electronics.png` | Electronic Components |
-| `component_mechanical.png` | Mechanical Components |
-| `blueprint.png` | Blueprint |
-| `fake_plate.png` | Fake Number Plate |
-| `signal_jammer.png` | Signal Jammer |
-| `tracker_device.png` | Tracking Device |
-| `hacking_device.png` | Hacking Device |
-| `weapon_parts.png` | Weapon Parts |
-| `ammo_components.png` | Ammunition Components |
-| `armour_plate.png` | Armour Plate |
-| `rope_restraints.png` | Rope Restraints |
-| `crim_token.png` | Marked Marker |
-| `chem_supplies.png` | Chemical Supplies |
-| `raw_material_a.png` | Raw Material A |
-| `raw_material_b.png` | Raw Material B |
-| `refined_product.png` | Refined Product |
-| `packaging_materials.png` | Packaging Materials |
-| `product_package.png` | Packaged Product |
-| `lab_keycard.png` | Lab Keycard |
-| `breathing_apparatus.png` | Breathing Apparatus |
-| `fire_hose_nozzle.png` | Hose Nozzle |
-| `boost_tablet.png` | Boosting Tablet |
-| `scratched_vin.png` | Scratched VIN Plate |
-| `ingredient_box.png` | Ingredient Box |
-| `coffee_cup.png` | Fresh Coffee |
-| `meal_box.png` | Prepared Meal |
