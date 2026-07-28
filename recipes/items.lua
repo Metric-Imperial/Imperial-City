@@ -649,7 +649,6 @@ return {
         label = 'Fishing Rod',
         weight = 2000,
         stack = false,
-        degrade = 180,
         description = 'A sturdy rod for coastal and deep-water fishing',
         client = { export = 'imperial_sidejobs.useRod' },
     },
@@ -667,7 +666,6 @@ return {
         label = 'Pickaxe',
         weight = 4000,
         stack = false,
-        degrade = 240,
     },
     ['stone'] = {
         label = 'Stone',
@@ -686,7 +684,6 @@ return {
         label = 'Felling Axe',
         weight = 4500,
         stack = false,
-        degrade = 240,
     },
     ['log'] = {
         label = 'Timber Log',
@@ -714,13 +711,11 @@ return {
         label = 'Watering Can',
         weight = 2000,
         stack = false,
-        degrade = 300,
     },
     ['farming_hoe'] = {
         label = 'Hoe',
         weight = 3000,
         stack = false,
-        degrade = 300,
     },
     ['fertiliser'] = {
         label = 'Fertiliser',
@@ -763,7 +758,6 @@ return {
         label = 'Toolkit',
         weight = 3500,
         stack = false,
-        degrade = 400,
     },
     ['component_electronics'] = {
         label = 'Electronic Components',
