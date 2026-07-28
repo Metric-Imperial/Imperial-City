@@ -123,6 +123,10 @@ ensure imperial_sidejobs
 ensure imperial_fire
 ensure imperial_mdt
 
+# Dev tool: prop picker for choosing models for activity sites (/prop, /propnext).
+# Client-side and non-networked. Remove this line to disable.
+ensure imperial_propcheck
+
 exec misc.cfg
 
 {{addPrincipalsMaster}}

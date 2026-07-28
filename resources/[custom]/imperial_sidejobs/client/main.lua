@@ -93,7 +93,8 @@ end
 
 ---@param propModel? number marker prop placed at each node
 ---@param toolProp? table prop held during the animation (ox_lib progressBar prop)
-local function setupNodes(kind, positions, icon, label, anim, propModel, toolProp)
+---@param tool string item required to work this node
+local function setupNodes(kind, positions, icon, label, anim, propModel, toolProp, tool)
     for index, pos in ipairs(positions) do
         if propModel then
             spawnNodeProp(('%s:%d'):format(kind, index), propModel, pos)
@@ -107,7 +108,13 @@ local function setupNodes(kind, positions, icon, label, anim, propModel, toolPro
                     label = label,
                     icon = icon,
                     canInteract = function()
-                        return not depleted[('%s:%d'):format(kind, index)]
+                        if depleted[('%s:%d'):format(kind, index)] then return false end
+                        -- Hide the option entirely when the player has no tool.
+                        -- Previously the full 7s animation played and only then
+                        -- did the server reject it, so you mimed a swing with an
+                        -- invisible pickaxe you did not own. The server check
+                        -- stays -- this is presentation, not security.
+                        return (exports.ox_inventory:GetItemCount(tool) or 0) > 0
                     end,
                     onSelect = function()
                         local finished = lib.progressBar({
@@ -157,13 +164,13 @@ CreateThread(function()
 
     setupNodes('mining', ImperialSideJobs.mining.nodes, 'fa-solid fa-hill-rockslide', 'Mine rock',
         { dict = 'melee@large_wpn@streamed_core', clip = 'ground_attack_on_spot' },
-        ImperialSideJobs.mining.nodeProp, pickaxeProp)
+        ImperialSideJobs.mining.nodeProp, pickaxeProp, 'pickaxe')
     -- No marker prop for lumber: the logging camp already has real trees, so a
     -- placed prop would double up. Set ImperialSideJobs.lumber.nodeProp if the
     -- trees turn out not to line up with the node coords.
     setupNodes('lumber', ImperialSideJobs.lumber.trees, 'fa-solid fa-tree', 'Chop tree',
         { dict = 'melee@large_wpn@streamed_core', clip = 'ground_attack_on_spot' },
-        ImperialSideJobs.lumber.nodeProp, axeProp)
+        ImperialSideJobs.lumber.nodeProp, axeProp, 'lumber_axe')
 
     -- blips
     for _, b in ipairs({ ImperialSideJobs.mining.blip, ImperialSideJobs.lumber.blip }) do
