@@ -24,11 +24,11 @@ ImperialSideJobs = {
         -- without one the target sphere sits on bare terrain and is invisible
         -- unless you already know the coordinates. Set to nil for no prop.
         --
-        -- Custom asset, streamed from imperial_assets/stream/coal_rock.ydr.
-        -- Applies to every entry in `nodes` below, so all six get it for now.
-        -- Once each ore has its own model and sites, this becomes per-group
-        -- rather than one prop for the whole activity.
-        nodeProp = `coal_rock`,
+        -- Custom asset from imperial_assets/stream/. One prop for every node
+        -- until the ore-specific restructure, which will give each ore its own
+        -- boulder and its own sites. The full set is already streamed:
+        -- prop_boulder_stone / _coal / _copper / _iron / _gem.
+        nodeProp = `prop_boulder_coal`,
         nodes = {
             vec3(2962.74, 2802.94, 40.60),           
             vec3(2946.45, 2810.49, 40.79),

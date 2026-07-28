@@ -6,23 +6,90 @@
       <lodDist value="200.00000000"/>
       <flags value="32"/>
       <specialAttribute value="0"/>
-      <!-- MUST match the drawable's own bounds exactly (see the top of
-           coal_rock.ydr.xml). These are not a culling hint: CreateObject
-           positions an object using its ARCHETYPE bounds, so a bbMin.z of -3
-           lifts the prop 3 metres off the ground. That was the cause of the
-           "floating rock", not the coordinates and not the collision. -->
-      <bbMin x="-0.38458472" y="-0.36772310" z="0.00000000"/>
-      <bbMax x="0.30281680" y="0.38268262" z="0.84745860"/>
-      <bsCentre x="-0.04088396" y="0.00747976" z="0.42372930"/>
-      <bsRadius value="0.66215855"/>
+      <bbMin x="-0.80000000" y="-0.70000000" z="0.00000000"/>
+      <bbMax x="0.80000000" y="0.70000000" z="1.20000000"/>
+      <bsCentre x="0.00000000" y="0.00000000" z="0.60000000"/>
+      <bsRadius value="1.22065560"/>
       <hdTextureDist value="100.00000000"/>
-      <name>coal_rock</name>
-      <textureDictionary>coal_rock</textureDictionary>
+      <name>prop_boulder_stone</name>
+      <textureDictionary>prop_boulder_stone</textureDictionary>
       <clipDictionary/>
       <drawableDictionary/>
       <physicsDictionary/>
       <assetType>ASSET_TYPE_DRAWABLE</assetType>
-      <assetName>coal_rock</assetName>
+      <assetName>prop_boulder_stone</assetName>
+      <extensions/>
+    </Item>
+    <Item type="CBaseArchetypeDef">
+      <lodDist value="200.00000000"/>
+      <flags value="32"/>
+      <specialAttribute value="0"/>
+      <bbMin x="-0.80000000" y="-0.70000000" z="0.00000000"/>
+      <bbMax x="0.80000000" y="0.70000000" z="1.20000000"/>
+      <bsCentre x="0.00000000" y="0.00000000" z="0.60000000"/>
+      <bsRadius value="1.22065560"/>
+      <hdTextureDist value="100.00000000"/>
+      <name>prop_boulder_coal</name>
+      <textureDictionary>prop_boulder_coal</textureDictionary>
+      <clipDictionary/>
+      <drawableDictionary/>
+      <physicsDictionary/>
+      <assetType>ASSET_TYPE_DRAWABLE</assetType>
+      <assetName>prop_boulder_coal</assetName>
+      <extensions/>
+    </Item>
+    <Item type="CBaseArchetypeDef">
+      <lodDist value="200.00000000"/>
+      <flags value="32"/>
+      <specialAttribute value="0"/>
+      <bbMin x="-0.80000000" y="-0.70000000" z="0.00000000"/>
+      <bbMax x="0.80000000" y="0.70000000" z="1.20000000"/>
+      <bsCentre x="0.00000000" y="0.00000000" z="0.60000000"/>
+      <bsRadius value="1.22065560"/>
+      <hdTextureDist value="100.00000000"/>
+      <name>prop_boulder_copper</name>
+      <textureDictionary>prop_boulder_copper</textureDictionary>
+      <clipDictionary/>
+      <drawableDictionary/>
+      <physicsDictionary/>
+      <assetType>ASSET_TYPE_DRAWABLE</assetType>
+      <assetName>prop_boulder_copper</assetName>
+      <extensions/>
+    </Item>
+    <Item type="CBaseArchetypeDef">
+      <lodDist value="200.00000000"/>
+      <flags value="32"/>
+      <specialAttribute value="0"/>
+      <bbMin x="-0.80000000" y="-0.70000000" z="0.00000000"/>
+      <bbMax x="0.80000000" y="0.70000000" z="1.20000000"/>
+      <bsCentre x="0.00000000" y="0.00000000" z="0.60000000"/>
+      <bsRadius value="1.22065560"/>
+      <hdTextureDist value="100.00000000"/>
+      <name>prop_boulder_iron</name>
+      <textureDictionary>prop_boulder_iron</textureDictionary>
+      <clipDictionary/>
+      <drawableDictionary/>
+      <physicsDictionary/>
+      <assetType>ASSET_TYPE_DRAWABLE</assetType>
+      <assetName>prop_boulder_iron</assetName>
+      <extensions/>
+    </Item>
+    <Item type="CBaseArchetypeDef">
+      <lodDist value="200.00000000"/>
+      <flags value="32"/>
+      <specialAttribute value="0"/>
+      <bbMin x="-0.80000000" y="-0.70000000" z="0.00000000"/>
+      <bbMax x="0.80000000" y="1.01106210" z="1.20000000"/>
+      <bsCentre x="0.00000000" y="0.15553108" z="0.60000000"/>
+      <bsRadius value="1.31602940"/>
+      <hdTextureDist value="100.00000000"/>
+      <name>prop_boulder_gem</name>
+      <textureDictionary>prop_boulder_gem</textureDictionary>
+      <clipDictionary/>
+      <drawableDictionary/>
+      <physicsDictionary/>
+      <assetType>ASSET_TYPE_DRAWABLE</assetType>
+      <assetName>prop_boulder_gem</assetName>
       <extensions/>
     </Item>
   </archetypes>
