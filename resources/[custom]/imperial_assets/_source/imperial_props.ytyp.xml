@@ -15,7 +15,7 @@
       <textureDictionary>prop_boulder_stone</textureDictionary>
       <clipDictionary/>
       <drawableDictionary/>
-      <physicsDictionary/>
+      <physicsDictionary>imperial_props</physicsDictionary>
       <assetType>ASSET_TYPE_DRAWABLE</assetType>
       <assetName>prop_boulder_stone</assetName>
       <extensions/>
@@ -33,7 +33,7 @@
       <textureDictionary>prop_boulder_coal</textureDictionary>
       <clipDictionary/>
       <drawableDictionary/>
-      <physicsDictionary/>
+      <physicsDictionary>imperial_props</physicsDictionary>
       <assetType>ASSET_TYPE_DRAWABLE</assetType>
       <assetName>prop_boulder_coal</assetName>
       <extensions/>
@@ -51,7 +51,7 @@
       <textureDictionary>prop_boulder_copper</textureDictionary>
       <clipDictionary/>
       <drawableDictionary/>
-      <physicsDictionary/>
+      <physicsDictionary>imperial_props</physicsDictionary>
       <assetType>ASSET_TYPE_DRAWABLE</assetType>
       <assetName>prop_boulder_copper</assetName>
       <extensions/>
@@ -69,7 +69,7 @@
       <textureDictionary>prop_boulder_iron</textureDictionary>
       <clipDictionary/>
       <drawableDictionary/>
-      <physicsDictionary/>
+      <physicsDictionary>imperial_props</physicsDictionary>
       <assetType>ASSET_TYPE_DRAWABLE</assetType>
       <assetName>prop_boulder_iron</assetName>
       <extensions/>
@@ -87,7 +87,7 @@
       <textureDictionary>prop_boulder_gem</textureDictionary>
       <clipDictionary/>
       <drawableDictionary/>
-      <physicsDictionary/>
+      <physicsDictionary>imperial_props</physicsDictionary>
       <assetType>ASSET_TYPE_DRAWABLE</assetType>
       <assetName>prop_boulder_gem</assetName>
       <extensions/>
