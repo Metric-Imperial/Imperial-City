@@ -75,24 +75,51 @@ local nodeProps = {}
 ---it immediately is a silent no-op and the prop hangs in mid-air at the
 ---configured Z. Retry until collision streams in, and only freeze afterwards --
 ---freezing first would pin it in the air permanently.
+---Drop a prop onto the terrain.
+---
+---PlaceObjectOnGroundProperly is unreliable here: it works off the object's own
+---physics bounds, so a model with no embedded collision never moves. Probe the
+---world for its surface height instead, which does not care what the prop is
+---made of, and offset by the model's own base so it rests on the surface rather
+---than sinking to its origin. PlaceObjectOnGroundProperly is kept only as a
+---fallback for when the probe finds nothing.
 ---@param onSettled fun(coords: vector3) called once the prop has its final position
-local function settleOnGround(obj, onSettled)
+local function settleOnGround(obj, model, coords, onSettled)
     CreateThread(function()
-        for _ = 1, 150 do -- ~15s, then give up and freeze wherever it is
+        local placed = false
+
+        for _ = 1, 150 do -- ~15s
             if not DoesEntityExist(obj) then return end
             if HasCollisionLoadedAroundEntity(obj) then
+                -- Probe from well above so the ray starts outside the terrain.
+                local found, groundZ = GetGroundZFor_3dCoord(coords.x, coords.y, coords.z + 25.0, false)
+                if found then
+                    -- min.z is the model's lowest point relative to its origin.
+                    -- Subtracting it seats the base on the surface whether the
+                    -- origin sits at the centre or the bottom of the mesh.
+                    local min = GetModelDimensions(model)
+                    SetEntityCoords(obj, coords.x, coords.y, groundZ - min.z, false, false, false, false)
+                    placed = true
+                    break
+                end
                 PlaceObjectOnGroundProperly(obj)
-                -- A second pass: the first can land short while the terrain LOD
-                -- is still resolving underneath.
-                Wait(250)
-                if DoesEntityExist(obj) then PlaceObjectOnGroundProperly(obj) end
+                placed = true
                 break
             end
             Wait(100)
         end
+
         if not DoesEntityExist(obj) then return end
         FreezeEntityPosition(obj, true)
-        if onSettled then onSettled(GetEntityCoords(obj)) end
+
+        local final = GetEntityCoords(obj)
+        if not placed then
+            print(('[sidejobs] node prop never settled (collision never loaded) at %.1f %.1f %.1f')
+                :format(coords.x, coords.y, coords.z))
+        end
+        print(('[sidejobs] node prop: config z=%.2f -> placed z=%.2f'):format(coords.z, final.z))
+
+        if onSettled then onSettled(final) end
     end)
 end
 
@@ -105,9 +132,11 @@ local function spawnNodeProp(id, model, coords, onSettled)
             if not lib.requestModel(model, 10000) then return end
             local obj = CreateObject(model, coords.x, coords.y, coords.z, false, false, false)
             SetEntityInvincible(obj, true)
-            SetModelAsNoLongerNeeded(model)
             nodeProps[id] = obj
-            settleOnGround(obj, onSettled)
+            -- Model stays requested until after settling: GetModelDimensions
+            -- needs it loaded to work out where the prop's base is.
+            settleOnGround(obj, model, coords, onSettled)
+            SetModelAsNoLongerNeeded(model)
         end,
         onExit = function()
             if nodeProps[id] and DoesEntityExist(nodeProps[id]) then
