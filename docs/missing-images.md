@@ -1,9 +1,10 @@
 # Missing item images
 
-**130 of 166 catalogue items have icons. 36 outstanding.**
+**147 of 166 catalogue items have icons. 19 outstanding.**
 
-All imperial-authored items are complete. What remains is base Qbox catalogue
-art that neither ox_inventory nor qb-inventory ships.
+Every imperial-authored item now has art. What remains is base Qbox catalogue
+items that neither ox_inventory nor qb-inventory ships — mostly vanilla
+leftovers that may never be surfaced in-game.
 
 ## Spec
 
@@ -35,25 +36,3 @@ art that neither ox_inventory nor qb-inventory ships.
 | `walking_stick.png` | Walking Stick |
 | `empty_evidence_bag.png` | Empty Evidence Bag |
 | `filled_evidence_bag.png` | Filled Evidence Bag |
-
-## Imperial-authored (17)
-
-| File | Item |
-|---|---|
-| `seed_wheat.png` | Wheat Seeds |
-| `seed_corn.png` | Corn Seeds |
-| `seed_orange.png` | Orange Sapling |
-| `seed_apple.png` | Apple Sapling |
-| `seed_coffee.png` | Coffee Seedling |
-| `seed_sugarcane.png` | Sugar Cane Cutting |
-| `seed_herbs.png` | Herb Seeds |
-| `seed_cotton.png` | Cotton Seeds |
-| `wheat.png` | Wheat |
-| `corn.png` | Corn |
-| `coffee_beans.png` | Coffee Beans |
-| `sugarcane.png` | Sugar Cane |
-| `herbs.png` | Fresh Herbs |
-| `cotton.png` | Cotton |
-| `flour.png` | Flour |
-| `sugar.png` | Sugar |
-| `produce_box.png` | Produce Box |
