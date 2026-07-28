@@ -68,7 +68,35 @@ end)
 -- like a tree already reads as interactable).
 local nodeProps = {}
 
-local function spawnNodeProp(id, model, coords)
+---Settle a prop onto the terrain once the ground beneath it actually exists.
+---
+---PlaceObjectOnGroundProperly only works when collision is loaded around the
+---point. Props are spawned from 100m away, where it usually is not, so calling
+---it immediately is a silent no-op and the prop hangs in mid-air at the
+---configured Z. Retry until collision streams in, and only freeze afterwards --
+---freezing first would pin it in the air permanently.
+---@param onSettled fun(coords: vector3) called once the prop has its final position
+local function settleOnGround(obj, onSettled)
+    CreateThread(function()
+        for _ = 1, 150 do -- ~15s, then give up and freeze wherever it is
+            if not DoesEntityExist(obj) then return end
+            if HasCollisionLoadedAroundEntity(obj) then
+                PlaceObjectOnGroundProperly(obj)
+                -- A second pass: the first can land short while the terrain LOD
+                -- is still resolving underneath.
+                Wait(250)
+                if DoesEntityExist(obj) then PlaceObjectOnGroundProperly(obj) end
+                break
+            end
+            Wait(100)
+        end
+        if not DoesEntityExist(obj) then return end
+        FreezeEntityPosition(obj, true)
+        if onSettled then onSettled(GetEntityCoords(obj)) end
+    end)
+end
+
+local function spawnNodeProp(id, model, coords, onSettled)
     lib.points.new({
         coords = coords,
         distance = 100.0,
@@ -76,11 +104,10 @@ local function spawnNodeProp(id, model, coords)
             if nodeProps[id] then return end
             if not lib.requestModel(model, 10000) then return end
             local obj = CreateObject(model, coords.x, coords.y, coords.z, false, false, false)
-            PlaceObjectOnGroundProperly(obj)
-            FreezeEntityPosition(obj, true)
             SetEntityInvincible(obj, true)
             SetModelAsNoLongerNeeded(model)
             nodeProps[id] = obj
+            settleOnGround(obj, onSettled)
         end,
         onExit = function()
             if nodeProps[id] and DoesEntityExist(nodeProps[id]) then
@@ -96,53 +123,72 @@ end
 ---@param tool string item required to work this node
 local function setupNodes(kind, positions, icon, label, anim, propModel, toolProp, tool)
     for index, pos in ipairs(positions) do
-        if propModel then
-            spawnNodeProp(('%s:%d'):format(kind, index), propModel, pos)
+        local key = ('%s:%d'):format(kind, index)
+        local zoneId
+
+        local option = {
+            name = ('imperial_%s_%d'):format(kind, index),
+            label = label,
+            icon = icon,
+            canInteract = function()
+                if depleted[key] then return false end
+                -- Hide the option entirely when the player has no tool.
+                -- Previously the full 7s animation played and only then did the
+                -- server reject it, so you mimed a swing with an invisible
+                -- pickaxe you did not own. The server check stays -- this is
+                -- presentation, not security.
+                return (exports.ox_inventory:GetItemCount(tool) or 0) > 0
+            end,
+            onSelect = function()
+                local finished = lib.progressBar({
+                    duration = 7000,
+                    label = label .. '…',
+                    canCancel = true,
+                    disable = { move = true, combat = true },
+                    anim = anim,
+                    prop = toolProp,
+                })
+                if not finished then return end
+                local ok, extra = lib.callback.await('imperial_sidejobs:gather', false, kind, index)
+                if ok then
+                    lib.notify({ type = 'success',
+                        description = ('+%d %s'):format(extra.count, extra.item) })
+                else
+                    local messages = {
+                        depleted = 'Nothing left here — try another spot.',
+                        notool = kind == 'mining' and 'You need a pickaxe.' or 'You need a felling axe.',
+                        capacity = 'Your bags are full.',
+                        cooldown = 'Take a breather.',
+                    }
+                    lib.notify({ type = 'error', description = messages[extra] or 'Nothing gained.' })
+                end
+            end,
+        }
+
+        local function placeZone(coords)
+            if zoneId then exports.ox_target:removeZone(zoneId) end
+            zoneId = exports.ox_target:addSphereZone({
+                coords = coords,
+                radius = 2.2,
+                options = { option },
+            })
         end
-        exports.ox_target:addSphereZone({
-            coords = pos,
-            radius = 2.2,
-            options = {
-                {
-                    name = ('imperial_%s_%d'):format(kind, index),
-                    label = label,
-                    icon = icon,
-                    canInteract = function()
-                        if depleted[('%s:%d'):format(kind, index)] then return false end
-                        -- Hide the option entirely when the player has no tool.
-                        -- Previously the full 7s animation played and only then
-                        -- did the server reject it, so you mimed a swing with an
-                        -- invisible pickaxe you did not own. The server check
-                        -- stays -- this is presentation, not security.
-                        return (exports.ox_inventory:GetItemCount(tool) or 0) > 0
-                    end,
-                    onSelect = function()
-                        local finished = lib.progressBar({
-                            duration = 7000,
-                            label = label .. '…',
-                            canCancel = true,
-                            disable = { move = true, combat = true },
-                            anim = anim,
-                            prop = toolProp,
-                        })
-                        if not finished then return end
-                        local ok, extra = lib.callback.await('imperial_sidejobs:gather', false, kind, index)
-                        if ok then
-                            lib.notify({ type = 'success',
-                                description = ('+%d %s'):format(extra.count, extra.item) })
-                        else
-                            local messages = {
-                                depleted = 'Nothing left here — try another spot.',
-                                notool = kind == 'mining' and 'You need a pickaxe.' or 'You need a felling axe.',
-                                capacity = 'Your bags are full.',
-                                cooldown = 'Take a breather.',
-                            }
-                            lib.notify({ type = 'error', description = messages[extra] or 'Nothing gained.' })
-                        end
-                    end,
-                },
-            },
-        })
+
+        -- Zone starts at the configured coordinate so no-prop nodes (lumber)
+        -- work as before. Where there IS a prop, the zone re-anchors to wherever
+        -- it actually settled.
+        --
+        -- The configured Z values were never ground-verified: the coal rock
+        -- visibly floated several metres up, which means these interaction
+        -- spheres have been hanging in mid-air the whole time. That is why nodes
+        -- could not be found without teleporting onto them. Re-anchoring makes
+        -- prop and zone self-correcting however wrong the config Z is.
+        placeZone(pos)
+        if propModel then
+            spawnNodeProp(key, propModel, pos, function(settled)
+                if #(settled - pos) > 0.5 then placeZone(settled) end
+            end)
+        end
     end
 end
 
