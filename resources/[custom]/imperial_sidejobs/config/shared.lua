@@ -35,6 +35,12 @@ ImperialSideJobs = {
             vec3(2953.64, 2795.85, 39.93),
             vec3(2971.36, 2788.50, 38.77),
         },
+        -- Tool held during the swing, and the animation played.
+        -- bone 28422 = IK_R_Hand. Tweak pos/rot here and restart the resource;
+        -- no code change needed. rot is (pitch, roll, yaw) in degrees.
+        toolProp = { model = `prop_tool_pickaxe`, pos = vec3(0.0, -0.03, -0.02), rot = vec3(-80.0, 0.0, 0.0) },
+        anim = { dict = 'melee@large_wpn@streamed_core', clip = 'ground_attack_on_spot' },
+
         nodeRespawnSec = 120,
         pickWearPercent = 3,
         oreTable = {
@@ -54,11 +60,29 @@ ImperialSideJobs = {
         -- model (e.g. `prop_tree_pine_02`) if the trees don't line up.
         nodeProp = nil,
         trees = {
-            vec3(-560.4, 5252.1, 70.5),
-            vec3(-548.9, 5262.7, 72.1),
-            vec3(-570.8, 5271.3, 73.9),
-            vec3(-582.2, 5244.6, 68.8),
+            vec3(-632.44, 5466.54, 52.46),
+            vec3(-629.14, 5470.35, 52.77),
+            vec3(-626.03, 5472.18, 52.47),
+            vec3(-620.09, 5488.43, 50.58),
+            vec3(-591.03, 5494.60, 53.03),
+            vec3(-585.51, 5491.02, 54.39),
+            vec3(-573.01, 5507.90, 54.66),
+            vec3(-575.95, 5526.30, 51.99),
+            vec3(-586.00, 5541.64, 50.00),
+            vec3(-585.36, 5544.18, 49.93),
         },
+        -- The axe sits differently in the hand to the pickaxe: v_ind_cs_axe has
+        -- its own origin and orientation, so the pickaxe's rotation does not
+        -- carry over. Tune here and restart -- no code change needed.
+        toolProp = { model = `v_ind_cs_axe`, pos = vec3(0.02, -0.02, -0.03), rot = vec3(-100.0, 15.0, 0.0) },
+
+        -- Felling a trunk is a horizontal swing, not a downward one.
+        -- ground_attack_on_spot is a strike at the FLOOR, which is why the
+        -- character doubles over at the tree. Hammering is a repeated
+        -- shoulder-height strike and reads far better for chopping.
+        -- Swap back to the melee dict if you prefer a heavier single swing.
+        anim = { dict = 'amb@world_human_hammering@male@base', clip = 'base' },
+
         treeRespawnSec = 90,
         axeWearPercent = 3,
         logsPerTree = { 2, 4 },

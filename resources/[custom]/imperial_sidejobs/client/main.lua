@@ -207,28 +207,22 @@ end
 CreateThread(function()
     -- bone 28422 = IK_R_Hand. pos/rot are the offsets that sit a long-handled
     -- tool in the grip for the ground_attack_on_spot swing.
-    local pickaxeProp = {
-        model = `prop_tool_pickaxe`,
-        bone = 28422,
-        pos = vec3(0.0, -0.03, -0.02),
-        rot = vec3(-80.0, 0.0, 0.0),
-    }
-    local axeProp = {
-        model = `v_ind_cs_axe`,
-        bone = 28422,
-        pos = vec3(0.0, -0.03, -0.02),
-        rot = vec3(-80.0, 0.0, 0.0),
-    }
+    -- Tool prop and animation both come from config now, so the axe angle and
+    -- the swing can be tuned by editing shared.lua and restarting -- no code
+    -- change, no round trip. bone 28422 = IK_R_Hand.
+    local function toolProp(cfg)
+        if not cfg then return nil end
+        return { model = cfg.model, bone = 28422, pos = cfg.pos, rot = cfg.rot }
+    end
 
-    setupNodes('mining', ImperialSideJobs.mining.nodes, 'fa-solid fa-hill-rockslide', 'Mine rock',
-        { dict = 'melee@large_wpn@streamed_core', clip = 'ground_attack_on_spot' },
-        ImperialSideJobs.mining.nodeProp, pickaxeProp, 'pickaxe')
-    -- No marker prop for lumber: the logging camp already has real trees, so a
-    -- placed prop would double up. Set ImperialSideJobs.lumber.nodeProp if the
-    -- trees turn out not to line up with the node coords.
-    setupNodes('lumber', ImperialSideJobs.lumber.trees, 'fa-solid fa-tree', 'Chop tree',
-        { dict = 'melee@large_wpn@streamed_core', clip = 'ground_attack_on_spot' },
-        ImperialSideJobs.lumber.nodeProp, axeProp, 'lumber_axe')
+    local mining, lumber = ImperialSideJobs.mining, ImperialSideJobs.lumber
+
+    setupNodes('mining', mining.nodes, 'fa-solid fa-hill-rockslide', 'Mine rock',
+        mining.anim, mining.nodeProp, toolProp(mining.toolProp), 'pickaxe')
+    -- No marker prop for lumber: the nodes sit on real trees, so a placed prop
+    -- would stack on top of existing geometry.
+    setupNodes('lumber', lumber.trees, 'fa-solid fa-tree', 'Chop tree',
+        lumber.anim, lumber.nodeProp, toolProp(lumber.toolProp), 'lumber_axe')
 
     -- blips
     for _, b in ipairs({ ImperialSideJobs.mining.blip, ImperialSideJobs.lumber.blip }) do
