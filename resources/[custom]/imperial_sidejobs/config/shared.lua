@@ -23,7 +23,12 @@ ImperialSideJobs = {
         -- Marker prop placed at every node so they are actually findable --
         -- without one the target sphere sits on bare terrain and is invisible
         -- unless you already know the coordinates. Set to nil for no prop.
-        nodeProp = `xs_terrain_rock_arena_1_01`,
+        --
+        -- Custom asset, streamed from imperial_assets/stream/coal_rock.ydr.
+        -- Applies to every entry in `nodes` below, so all six get it for now.
+        -- Once each ore has its own model and sites, this becomes per-group
+        -- rather than one prop for the whole activity.
+        nodeProp = `coal_rock`,
         nodes = {
             vec3(2954.1, 2794.5, 41.0),
             vec3(2962.7, 2802.1, 40.6),
