@@ -138,6 +138,16 @@ tasks:
     dest: ./resources/[ox]/ox_inventory/data/items.lua
     overwrite: true
 
+  # Shop stock. ox_inventory's default YouTool sells a single lockpick, which
+  # left every gathering tool unobtainable: imperial_sidejobs consumed pickaxe /
+  # lumber_axe / fishing_bait and imperial_farming consumed seeds, watering_can
+  # and fertiliser, but nothing sold or crafted any of them. Mining, lumber and
+  # the entire farming loop were unreachable from a fresh character, silently.
+  - action: copy_path
+    src: ./tmp/imperial/recipes/shops.lua
+    dest: ./resources/[ox]/ox_inventory/data/shops.lua
+    overwrite: true
+
   # Item icons. ox_inventory's release ships only ~197 PNGs and the catalogue
   # above defines 166 items, most of which have no matching art -- including
   # every imperial-authored item, which no upstream pack will ever carry.
