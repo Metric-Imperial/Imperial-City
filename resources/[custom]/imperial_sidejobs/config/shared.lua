@@ -30,12 +30,10 @@ ImperialSideJobs = {
         -- rather than one prop for the whole activity.
         nodeProp = `coal_rock`,
         nodes = {
-            vec3(2954.1, 2794.5, 41.0),
-            vec3(2962.7, 2802.1, 40.6),
-            vec3(2970.3, 2787.9, 40.2),
-            vec3(2946.9, 2810.4, 41.3),
-            vec3(-595.3, 2090.5, 131.4),
-            vec3(-588.1, 2096.2, 130.9),
+            vec3(2962.74, 2802.94, 40.60),           
+            vec3(2946.45, 2810.49, 40.79),
+            vec3(2953.64, 2795.85, 39.93),
+            vec3(2971.36, 2788.50, 38.77),
         },
         nodeRespawnSec = 120,
         pickWearPercent = 3,

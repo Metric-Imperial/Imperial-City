@@ -90,8 +90,18 @@ local function spawnNodeProp(id, model, coords)
             local obj = CreateObject(model, coords.x, coords.y, coords.z, false, false, false)
             FreezeEntityPosition(obj, true)
             SetEntityInvincible(obj, true)
-            SetModelAsNoLongerNeeded(model)
             nodeProps[id] = obj
+
+            -- Diagnostic: what we asked for vs where the object actually is, and
+            -- the model's runtime bounds. If placed z differs from requested z,
+            -- CreateObject is repositioning it. If min.z is non-zero, the mesh is
+            -- offset from its origin and the prop needs that offset applied.
+            local actual = GetEntityCoords(obj)
+            local mn, mx = GetModelDimensions(model)
+            print(('[sidejobs] %s requested z=%.2f actual z=%.2f | model min.z=%.3f max.z=%.3f (h=%.2f)')
+                :format(id, coords.z, actual.z, mn.z, mx.z, mx.z - mn.z))
+
+            SetModelAsNoLongerNeeded(model)
         end,
         onExit = function()
             if nodeProps[id] and DoesEntityExist(nodeProps[id]) then
