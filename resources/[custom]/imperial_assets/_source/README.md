@@ -20,6 +20,37 @@ every other stream folder in this server ships only `.ytd` texture replacements
 and declares no ytyp. `[maps]/pillbox` is the one that does, and it ships
 `.ydr` files.
 
+## physicsDictionary is required, or the prop has no collision
+
+Every archetype **must** declare:
+
+```xml
+<physicsDictionary>imperial_props</physicsDictionary>
+```
+
+Left empty (`<physicsDictionary/>`), the engine is told the archetype has no
+physics and never associates the drawable's embedded bound with it. The prop
+then renders perfectly, sits correctly, reports the right dimensions — and
+players walk straight through it. `RequestCollisionForModel` cannot help,
+because there is nothing registered to load.
+
+Diagnosing it: `/prop <model>` reports collision state.
+
+```
+prop_rock_1_d       2.94 x 2.67 x 1.48 m   collision=1      <- stock, works
+prop_boulder_iron   1.60 x 1.40 x 1.20 m   collision=false  <- empty physicsDictionary
+prop_boulder_coal   1.68 x 1.48 x 1.28 m   collision=1      <- fixed
+```
+
+Note the dimensions change once physics loads: `GetModelDimensions` starts
+reporting the **collision** bounds (including the 0.04 margin) rather than the
+drawable bounding box. A prop reporting slightly larger numbers than its mesh is
+therefore a good sign, not a fault.
+
+Comparing against a stock prop through the same code path is the fastest way to
+tell a broken asset from broken script: if `prop_rock_1_d` is solid and yours is
+not, the problem is the asset or its archetype, not the spawning code.
+
 ## Converting imperial_props.ytyp.xml
 
 In CodeWalker, same round trip you used for the `.ydr`:
