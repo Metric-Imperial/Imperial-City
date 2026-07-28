@@ -62,6 +62,11 @@ local function spawnProp(model)
 
     -- isNetwork = false, netMissionEntity = false -> local only.
     current = CreateObject(hash, c.x, c.y, c.z, false, false, false)
+    -- Objects created this way do not collide until told to, even when the
+    -- model has bounds. Enable it so /prop reflects how the prop will actually
+    -- behave in place rather than looking right but being walk-through.
+    SetEntityCollision(current, true, true)
+    SetEntityLoadCollisionFlag(current, true)
     PlaceObjectOnGroundProperly(current)
     FreezeEntityPosition(current, true)
     currentModel = type(model) == 'string' and model or tostring(model)

@@ -88,6 +88,11 @@ local function spawnNodeProp(id, model, coords)
             if nodeProps[id] then return end
             if not lib.requestModel(model, 10000) then return end
             local obj = CreateObject(model, coords.x, coords.y, coords.z, false, false, false)
+            -- Collision has to be turned on explicitly. An object created this
+            -- way is non-colliding by default even when its model has bounds --
+            -- the rock rendered correctly but players walked straight through.
+            SetEntityCollision(obj, true, true)
+            SetEntityLoadCollisionFlag(obj, true)
             FreezeEntityPosition(obj, true)
             SetEntityInvincible(obj, true)
             nodeProps[id] = obj
