@@ -675,10 +675,30 @@ return {
         label = 'Coal',
         weight = 250,
     },
+    -- Raw ore from iron and copper nodes. Heavier than the refined metal
+    -- (weight 100) because it is still mostly rock -- hauling it unsmelted
+    -- costs you inventory space.
+    ['iron_ore'] = {
+        label = 'Iron Ore',
+        weight = 350,
+        description = 'Raw ore straight out of the rock. Needs smelting',
+    },
+    ['copper_ore'] = {
+        label = 'Copper Ore',
+        weight = 350,
+        description = 'Raw ore straight out of the rock. Needs smelting',
+    },
     ['uncut_gem'] = {
         label = 'Uncut Gem',
         weight = 120,
-        description = 'A rough gemstone. A jeweller might be interested',
+        description = 'A rough gemstone. The jeweller on Portola Drive cuts these',
+    },
+    -- Cut and polished by the jeweller. Lighter than the rough stone because
+    -- most of the mass is ground away.
+    ['emerald_gem'] = {
+        label = 'Cut Emerald',
+        weight = 40,
+        description = 'Cut and polished. Worth considerably more than the rough stone',
     },
     ['lumber_axe'] = {
         label = 'Felling Axe',

@@ -40,3 +40,6 @@ server.cfg
 # Local database dumps / backups
 *.sql.bak
 *.sql.gz
+
+# Packaged recipe archive (build artefact, rebuilt on demand)
+*.zip

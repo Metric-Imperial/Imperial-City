@@ -92,3 +92,34 @@ Add another `<Item type="CBaseArchetypeDef">` block per model inside
 `<archetypes>`, with `name` and `assetName` both set to the model's filename
 (without extension). One `.ytyp` can hold every prop in the suite — there is no
 need for one per model, and only one `data_file` line is needed either way.
+
+## Never put XML comments in the .ytyp
+
+CodeWalker's ytyp reader walks the children of `<archetypes>` and casts each
+node to an element. An XML comment is a node but not an element, so the cast
+yields null and the import dies with:
+
+```
+Unable to import file
+Object reference not set to an instance of an object.
+```
+
+The file is valid XML and every editor will accept it — only CodeWalker
+objects, and its error names neither the file nor the line. Document archetypes
+here in the README instead, never inline.
+
+## imperial_smelter
+
+Built procedurally from `_work/smelter/build_smelter.py` (headless Blender +
+Sollumz) rather than modelled by hand, so dimensions, bevels and the origin are
+all reproducible. Bounds are copied verbatim out of the exported
+`imperial_smelter.ydr.xml`:
+
+```
+bbMin  -0.75, -0.64, 0.00      <- z=0: the mesh is built upward from its origin
+bbMax   0.75,  0.60, 1.43
+```
+
+`textureDictionary` is empty because the six textures are embedded in the
+drawable. Shaders are `normal_spec.sps` (masonry, brass, red, iron) and
+`emissive.sps` (the fire), never `default.sps`.

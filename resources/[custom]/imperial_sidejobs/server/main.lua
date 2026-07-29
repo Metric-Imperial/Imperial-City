@@ -80,42 +80,121 @@ lib.callback.register('imperial_sidejobs:fish', function(src, skillPassed)
 end)
 
 -- ── Mining / Lumber (shared node logic) ─────────────────────────────────
-local function gatherNode(src, kind, index)
+
+---Node identity. Mining nodes are grouped by ore, so the ore id is part of the
+---key -- a coal seam and an iron deposit can both be index 1. Must stay in step
+---with nodeKey() on the client.
+local function nodeKey(kind, group, index)
+    return group and ('%s:%s:%d'):format(kind, group, index)
+        or ('%s:%d'):format(kind, index)
+end
+
+---@param group? string ore id for mining, nil for lumber
+---@param skillPassed boolean did the player land the swing
+local function gatherNode(src, kind, index, group, skillPassed)
     local cfg = ImperialSideJobs[kind]
-    local nodes = kind == 'mining' and cfg.nodes or cfg.trees
-    local node = nodes[index]
+
+    -- Mining nodes live under their ore and yield that ore specifically; lumber
+    -- keeps a single flat list. There is no shared random ore table any more --
+    -- a coal seam gives coal.
+    local ore, node
+    if kind == 'mining' then
+        ore = cfg.ores[group]
+        if not ore then return false, 'invalid' end
+        node = ore.nodes[index]
+    else
+        node = cfg.trees[index]
+    end
     if not node then return false, 'invalid' end
     if not exports.imperial_logging:ValidateDistance(src, node, 5.0) then return false, 'toofar' end
 
-    local key = ('%s:%d'):format(kind, index)
+    local key = nodeKey(kind, group, index)
     local now = os.time()
     if depletedNodes[key] and depletedNodes[key] > now then return false, 'depleted' end
 
     local tool = kind == 'mining' and 'pickaxe' or 'lumber_axe'
     if (exports.ox_inventory:Search(src, 'count', tool) or 0) < 1 then return false, 'notool' end
+
+    -- Wear applies whether or not the strike lands: a fluffed swing still blunts
+    -- the pick.
     wearTool(src, tool, kind == 'mining' and cfg.pickWearPercent or cfg.axeWearPercent)
 
-    local respawn = kind == 'mining' and cfg.nodeRespawnSec or cfg.treeRespawnSec
-    depletedNodes[key] = now + respawn
-    TriggerClientEvent('imperial_sidejobs:client:nodeDepleted', -1, kind, index, respawn)
+    -- A missed skill check costs the swing but not the node, which stays
+    -- workable for the next attempt.
+    if skillPassed ~= true then return false, 'missed' end
 
     local item, n
     if kind == 'mining' then
-        local ore = weightedPick(cfg.oreTable)
         item, n = ore.item, math.random(ore.count[1], ore.count[2])
     else
         item, n = 'log', math.random(cfg.logsPerTree[1], cfg.logsPerTree[2])
     end
+
+    -- Checked before depleting, so a full inventory does not burn the node.
     if not exports.ox_inventory:CanCarryItem(src, item, n) then return false, 'capacity' end
+
+    local respawn = kind == 'mining' and cfg.nodeRespawnSec or cfg.treeRespawnSec
+    depletedNodes[key] = now + respawn
+    TriggerClientEvent('imperial_sidejobs:client:nodeDepleted', -1, kind, index, group, respawn)
+
     exports.ox_inventory:AddItem(src, item, n)
     return true, { item = item, count = n }
 end
 
-lib.callback.register('imperial_sidejobs:gather', function(src, kind, index)
+lib.callback.register('imperial_sidejobs:gather', function(src, kind, index, group, skillPassed)
     if not exports.imperial_logging:RateLimit(src, 'sidejob:gather', 8, 30000) then return false, 'cooldown' end
     if kind ~= 'mining' and kind ~= 'lumber' then return false, 'invalid' end
     if type(index) ~= 'number' then return false, 'invalid' end
-    return gatherNode(src, kind, index)
+    if kind == 'mining' and type(group) ~= 'string' then return false, 'invalid' end
+    return gatherNode(src, kind, index, group, skillPassed)
+end)
+
+-- ── Smelting ────────────────────────────────────────────────────────────
+lib.callback.register('imperial_sidejobs:smelt', function(src, index, input, skillPassed)
+    if not exports.imperial_logging:RateLimit(src, 'sidejob:smelt', 6, 30000) then
+        return false, 'cooldown'
+    end
+    if type(index) ~= 'number' or type(input) ~= 'string' then return false, 'invalid' end
+
+    local cfg = ImperialSideJobs.smelting
+    local site = cfg.sites[index]
+    if not site then return false, 'invalid' end
+    -- Sites carry a heading as well as coords, so the position is site.coords.
+    if not exports.imperial_logging:ValidateDistance(src, site.coords, 5.0) then
+        return false, 'toofar'
+    end
+
+    -- Recipe is looked up by input item, never taken from the client. The
+    -- client only says which ore it fed in.
+    local recipe
+    for _, r in ipairs(cfg.recipes) do
+        if r.input == input then recipe = r break end
+    end
+    if not recipe then return false, 'invalid' end
+
+    if (exports.ox_inventory:Search(src, 'count', cfg.fuel.item) or 0) < cfg.fuel.count then
+        return false, 'nofuel'
+    end
+    if (exports.ox_inventory:Search(src, 'count', recipe.input) or 0) < recipe.count then
+        return false, 'noore'
+    end
+    if not exports.ox_inventory:CanCarryItem(src, recipe.output, recipe.yield) then
+        return false, 'capacity'
+    end
+
+    -- Fuel burns whether or not the pour lands. A botched smelt costs the coal
+    -- but keeps the ore, so failure stings without being punishing.
+    exports.ox_inventory:RemoveItem(src, cfg.fuel.item, cfg.fuel.count)
+    if skillPassed ~= true then return false, 'ruined' end
+
+    exports.ox_inventory:RemoveItem(src, recipe.input, recipe.count)
+    exports.ox_inventory:AddItem(src, recipe.output, recipe.yield)
+
+    exports.imperial_logging:Log({
+        resource = 'imperial_sidejobs', category = 'craft',
+        action = 'smelt-' .. recipe.output, source = src, amount = recipe.yield,
+    })
+    return true, { item = recipe.output, count = recipe.yield }
 end)
 
 lib.callback.register('imperial_sidejobs:getDepleted', function(_)
@@ -301,4 +380,126 @@ CreateThread(function()
             if at <= now then depletedNodes[key] = nil end
         end
     end
+end)
+
+-- ── Jeweller ────────────────────────────────────────────────────────────
+--
+-- Cutting takes real time, so an order has to outlive the interaction, the
+-- player's session and a server restart. That rules out an in-memory table:
+-- a restart would silently eat everyone's stones.
+
+-- The schema also ships as sql/013_jeweller.sql for fresh deploys. Creating it
+-- here as well means an already-running server picks it up on restart without
+-- anyone hand-applying migrations. CREATE TABLE IF NOT EXISTS is idempotent, so
+-- running both ways is harmless.
+CreateThread(function()
+    MySQL.query.await([[
+        CREATE TABLE IF NOT EXISTS `imperial_jeweller_orders` (
+          `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+          `citizenid` VARCHAR(50) NOT NULL,
+          `count` INT UNSIGNED NOT NULL,
+          `ready_at` INT UNSIGNED NOT NULL,
+          `collected` TINYINT(1) NOT NULL DEFAULT 0,
+          `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          PRIMARY KEY (`id`),
+          KEY `idx_jeweller_citizen` (`citizenid`, `collected`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    ]])
+end)
+
+local function citizenOf(src)
+    local player = exports.qbx_core:GetPlayer(src)
+    return player and player.PlayerData and player.PlayerData.citizenid or nil
+end
+
+lib.callback.register('imperial_sidejobs:jeweller:submit', function(src, count)
+    if not exports.imperial_logging:RateLimit(src, 'sidejob:jeweller', 4, 30000) then
+        return false, 'cooldown'
+    end
+
+    local cfg = ImperialSideJobs.jeweller
+    if not exports.imperial_logging:ValidateDistance(src, cfg.coords.xyz, 5.0) then
+        return false, 'toofar'
+    end
+
+    -- Clamped server-side: the client's number is a request, not an instruction.
+    count = math.floor(tonumber(count) or 0)
+    if count < 1 then return false, 'nogems' end
+    count = math.min(count, cfg.maxPerOrder)
+
+    local citizenid = citizenOf(src)
+    if not citizenid then return false, 'noorder' end
+
+    -- One batch at a time, which keeps the fiction simple and stops the table
+    -- filling with parallel orders from one player.
+    local pending = MySQL.scalar.await(
+        'SELECT id FROM imperial_jeweller_orders WHERE citizenid = ? AND collected = 0 LIMIT 1',
+        { citizenid })
+    if pending then return false, 'busy' end
+
+    if (exports.ox_inventory:Search(src, 'count', cfg.input) or 0) < count then
+        return false, 'nogems'
+    end
+
+    local player = exports.qbx_core:GetPlayer(src)
+    local fee = cfg.feePerGem * count
+    if not player.Functions.RemoveMoney('cash', fee, 'imperial-jeweller-cutting') then
+        return false, 'nomoney'
+    end
+
+    -- Stones leave the player's hands now; only the receipt goes in the table.
+    if not exports.ox_inventory:RemoveItem(src, cfg.input, count) then
+        player.Functions.AddMoney('cash', fee, 'imperial-jeweller-refund')
+        return false, 'nogems'
+    end
+
+    local seconds = cfg.cutTimeSecPerGem * count
+    MySQL.insert.await(
+        'INSERT INTO imperial_jeweller_orders (citizenid, count, ready_at) VALUES (?, ?, ?)',
+        { citizenid, count, os.time() + seconds })
+
+    exports.imperial_logging:Log({
+        resource = 'imperial_sidejobs', category = 'money',
+        action = 'jeweller-cutting-fee', source = src, amount = fee,
+    })
+    return true, { count = count, fee = fee, seconds = seconds }
+end)
+
+lib.callback.register('imperial_sidejobs:jeweller:collect', function(src)
+    local cfg = ImperialSideJobs.jeweller
+    if not exports.imperial_logging:ValidateDistance(src, cfg.coords.xyz, 5.0) then
+        return false, 'toofar'
+    end
+
+    local citizenid = citizenOf(src)
+    if not citizenid then return false, 'noorder' end
+
+    local order = MySQL.single.await(
+        'SELECT id, count, ready_at FROM imperial_jeweller_orders WHERE citizenid = ? AND collected = 0 LIMIT 1',
+        { citizenid })
+    if not order then return false, 'noorder' end
+
+    local now = os.time()
+    if order.ready_at > now then
+        return false, 'notready', order.ready_at - now
+    end
+
+    local out = weightedPick(cfg.outputs)
+    if not exports.ox_inventory:CanCarryItem(src, out.item, order.count) then
+        return false, 'capacity'
+    end
+
+    -- Marked collected before handing over, and guarded on collected = 0, so a
+    -- double-click cannot pay out twice.
+    local claimed = MySQL.update.await(
+        'UPDATE imperial_jeweller_orders SET collected = 1 WHERE id = ? AND collected = 0',
+        { order.id })
+    if not claimed or claimed < 1 then return false, 'noorder' end
+
+    exports.ox_inventory:AddItem(src, out.item, order.count)
+    exports.imperial_logging:Log({
+        resource = 'imperial_sidejobs', category = 'craft',
+        action = 'jeweller-collect-' .. out.item, source = src, amount = order.count,
+    })
+    return true, { item = out.item, count = order.count }
 end)

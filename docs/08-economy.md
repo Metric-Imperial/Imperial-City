@@ -98,3 +98,44 @@ circulation (via a simple `SUM` query across player data), business/gang
 ledger growth rate, and the ratio of legitimate-job income to criminal
 income — all derivable from the tables in `docs/07-database.md` plus
 qbx_core's own player table.
+
+## Gathering and refining chain
+
+Mining nodes are ore-specific: a coal seam yields coal, an iron deposit
+yields `iron_ore`. Two of the five outputs are deliberately **not** sellable
+as mined — they are raw ore, and refining them is a real step rather than a
+cosmetic one.
+
+```text
+Stone Outcrop   ─▶ stone                                    ─▶ buyer ($8)
+Coal Seam       ─▶ coal        ─┬─────────────────────────▶ buyer ($12)
+                                └─▶ fuel for smelting
+Iron Deposit    ─▶ iron_ore    ─▶ smelter (2:1, 1 coal)  ─▶ iron   ─▶ buyer ($18)
+Copper Deposit  ─▶ copper_ore  ─▶ smelter (2:1, 1 coal)  ─▶ copper ─▶ buyer ($18)
+Gem Vein        ─▶ uncut_gem   ─▶ jeweller (timed, $75/ea) ─▶ emerald_gem
+```
+
+Coal has two competing uses — sell it, or burn it — which is the only real
+decision in the chain and the reason it is priced lower than the metals.
+
+### Smelting
+
+Two fixed smelters sit at the copper and iron sites (`imperial_sidejobs`
+config `smelting.sites`). Each smelt consumes **1 coal** as fuel and takes a
+skill check; a botched pour costs the fuel but keeps the ore.
+
+Smelters placed in the world are permanent fixtures with no durability.
+Player-crafted smelters and benches (planned, via `imperial_crafting`) will
+deplete per item processed — the distinction is deliberate: a free public
+furnace at the ore face, a consumable one you carry to your own workshop.
+
+### Gem cutting
+
+Cutting is not instant. Stones are handed to the jeweller on Portola Drive,
+the fee is charged up front, and the order is written to
+`imperial_jeweller_orders` — it survives logout and server restart, which is
+why it is a table and not an in-memory list. One batch per player at a time.
+
+`emerald_gem` currently has no buyer price: it is the top of the chain and
+intended for player-to-player sale or a future fence. `outputs` in config is
+a weighted table, so further stones are one line each once art exists.

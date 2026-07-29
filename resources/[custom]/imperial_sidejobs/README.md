@@ -8,8 +8,18 @@ the right tools, and qbx_cityhall remains the formal employment office.
 ## Jobs
 - **Fishing** — rod (degradable) + bait at fishing spots; skill check; weighted
   server-side catch table; per-cast cooldown.
-- **Mining** — pickaxe at quarry nodes; shared node depletion with respawn
-  timers (server-tracked, synced to all clients).
+- **Mining** — pickaxe at ore-specific nodes: stone, coal, copper, iron and gem,
+  each with its own boulder, its own four sites and a guaranteed yield. The
+  swing is a skill check, not a fixed timer. A worked node *despawns* and
+  returns after 60s (server-tracked, synced to all clients). No map blips —
+  sites are meant to be found.
+- **Smelting** — fixed smelters at the copper and iron sites turn
+  `iron_ore`/`copper_ore` into `iron`/`copper`, 2:1, burning 1 coal each. Custom
+  `imperial_smelter` prop with an emissive firebox and looped chimney smoke;
+  prop and particle effect both stream with player distance.
+- **Jeweller** — ped on Portola Drive cuts `uncut_gem` into `emerald_gem` over
+  real time (5 min/stone, $75/stone, 10 max). Orders live in
+  `imperial_jeweller_orders` so they survive logout and server restarts.
 - **Lumber** — felling axe at logging camp; logs → planks at the sawmill bench
   (imperial_crafting `saw_planks`).
 - **Construction** — carry-materials task loop with per-task wage + shift bonus.
@@ -30,6 +40,12 @@ the right tools, and qbx_cityhall remains the formal employment office.
 ## Test checklist
 - [ ] Fishing outside spots rejected + logged; bait consumed per cast.
 - [ ] Two miners on one node: second gets 'depleted'.
+- [ ] Failed mining skill check leaves the node workable; tool still wears.
+- [ ] Mining with full bags does not burn the node.
+- [ ] Smelt with no coal rejected; failed pour costs fuel but keeps the ore.
+- [ ] Jeweller: second batch while one is pending rejected ('busy').
+- [ ] Jeweller: collect before ready reports remaining time, pays nothing.
+- [ ] Jeweller order survives a server restart and is still collectable.
 - [ ] Construction deliver without pickup rejected.
 - [ ] Transport payout equals collected stops only; abandoning pays nothing.
 - [ ] Selling clamps to owned count; convar prices honoured.

@@ -3,8 +3,8 @@
 Audit of `recipes/items.lua`, the consolidated ox_inventory item catalogue
 that overrides `ox_inventory/data/items.lua` at deploy time (see
 `recipes/imperial-city-qbox.yaml`). Base is the official Qbox-project
-`items.lua` (103 items), extended with 69 Imperial-specific items grouped
-under the `-- IMPERIAL ITEMS` marker, for 172 total.
+`items.lua` (103 items), extended with 72 Imperial-specific items grouped
+under the `-- IMPERIAL ITEMS` marker, for 175 total.
 
 ## Method
 
@@ -21,7 +21,7 @@ by any custom resource.
 
 ### Duplicate keys: none
 
-All 172 item keys are unique. A duplicate key would silently overwrite an
+All 175 item keys are unique. A duplicate key would silently overwrite an
 earlier definition in Lua table syntax — this was checked first since it's
 the class of bug that would be easy to introduce while hand-editing a
 900-line file and easy to miss without tooling.
@@ -37,7 +37,7 @@ the business-made version from the base catalogue drink.
 
 ### Items defined but not referenced by any imperial_* resource: 8
 
-These 69 Imperial-added items were cross-checked against every config and
+These 72 Imperial-added items were cross-checked against every config and
 server file under `resources/[custom]`. Eight showed no reference anywhere
 in this repository's own code. Each is assessed individually below rather
 than assumed to be dead weight, since several are plausible integration
@@ -81,7 +81,7 @@ follow-up rather than omitted.
 
 ## Summary
 
-- 172 total items, 0 duplicate keys.
+- 175 total items, 0 duplicate keys.
 - 1 duplicate label found and fixed (`coffee_cup` → "Fresh Coffee").
 - 6 of 8 apparently-unreferenced items are plausible third-party
   integration points, kept as-is.

@@ -10,6 +10,10 @@
 --- /proplist       list the built-in candidate models (validated)
 --- /propnext       cycle forward through the candidate list
 --- /propprev       cycle back through the candidate list
+--- /nodehere       capture a bare vec3 (rocks, trees -- no facing)
+--- /sitehere       capture coords + heading (props with a front)
+--- /smoke          cycle particle-effect candidates
+--- /smokestop      stop the current effect
 
 -- Candidate rock/mineral props for mining nodes. Each is validated against the
 -- game's model index before use, so anything not present in this build is
@@ -185,8 +189,108 @@ RegisterCommand('nodehere', function()
     })
 end, false)
 
+-- Capture a coordinate AND a facing, for props where orientation matters.
+--
+-- /nodehere gives a bare vec3, which is all a boulder needs -- a rock looks the
+-- same from any angle. A smelter does not: it has a front. This prints the full
+-- config entry instead.
+--
+-- Stand on the spot facing the smelter the way you want it to end up, and the
+-- heading is used as-is.
+--
+-- An earlier version added 180 degrees, reasoning that the smelter's firebox is
+-- modelled on -Y while a GTA entity points +Y at heading 0. That cancels out:
+-- the player's own heading is measured the same way, so the raw value is
+-- already correct and the correction turned every prop back to front. Verified
+-- in-game on both smelter sites.
+RegisterCommand('sitehere', function()
+    local ped = cache.ped
+    local c = GetEntityCoords(ped)
+    local _, groundZ = GetGroundZFor_3dCoord(c.x, c.y, c.z + 1.0, false)
+    local h = GetEntityHeading(ped)
+    local line = ('{ coords = vec3(%.2f, %.2f, %.2f), heading = %.1f },')
+        :format(c.x, c.y, groundZ ~= 0 and groundZ or c.z, h)
+
+    print('[propcheck] ' .. line)
+    lib.setClipboard(line)
+    lib.notify({ type = 'success', title = 'Site captured',
+        description = line, duration = 8000 })
+end, false)
+
+-- ── Particle effects ────────────────────────────────────────────────────
+--
+-- ptfx asset names cannot be derived or listed at runtime, and a wrong one
+-- fails silently -- no error, just nothing. Same problem as prop names, so the
+-- same answer: cycle candidates in-game and keep what looks right.
+--
+-- /smoke              cycle to the next candidate at your feet
+-- /smoke <dict> <fx>  try a specific pair
+-- /smokestop          stop the current effect
+
+local SMOKE_CANDIDATES = {
+    { 'core', 'ent_amb_smoke_general' },
+    { 'core', 'exp_grd_bzgas_smoke' },
+    { 'core', 'fire_wrecked_plane_cabin' },
+    { 'core', 'ent_ray_paleto_gas_flames' },
+    { 'core', 'ent_dst_gen_gobstop' },
+    { 'scr_carsteal4', 'scr_carsteal4_wheel_burnout' },
+    { 'scr_trevor3', 'scr_trev3_trailer_boosh' },
+    { 'scr_agencyheistb', 'scr_agency3b_smoke' },
+    { 'cut_trevor1', 'cs_trev1_camp_fire' },
+}
+
+local smokeFx, smokeIndex = nil, 0
+
+local function stopSmoke()
+    if smokeFx then
+        StopParticleFxLooped(smokeFx, false)
+        smokeFx = nil
+    end
+end
+
+local function playSmoke(dict, effect)
+    stopSmoke()
+    if not lib.requestNamedPtfxAsset(dict, 8000) then
+        lib.notify({ type = 'error', description = ('dict %s would not load'):format(dict) })
+        print(('[propcheck] ptfx dict FAILED: %s'):format(dict))
+        return false
+    end
+    UseParticleFxAsset(dict)
+
+    local c = GetEntityCoords(cache.ped) + GetEntityForwardVector(cache.ped) * 1.5
+    smokeFx = StartParticleFxLoopedAtCoord(effect, c.x, c.y, c.z + 1.0,
+        0.0, 0.0, 0.0, 1.0, false, false, false, false)
+
+    -- A bad effect name inside a good dict returns a handle anyway and simply
+    -- draws nothing, so the handle is not proof it worked -- your eyes are.
+    print(('[propcheck] ptfx %s / %s  handle=%s'):format(dict, effect, tostring(smokeFx)))
+    lib.notify({ type = 'info', title = dict, description = effect, duration = 6000 })
+    return true
+end
+
+RegisterCommand('smoke', function(_, args)
+    if args[1] and args[2] then
+        playSmoke(args[1], args[2])
+        return
+    end
+    smokeIndex = smokeIndex + 1
+    if smokeIndex > #SMOKE_CANDIDATES then smokeIndex = 1 end
+    local c = SMOKE_CANDIDATES[smokeIndex]
+    lib.notify({ type = 'info',
+        description = ('%d / %d'):format(smokeIndex, #SMOKE_CANDIDATES) })
+    playSmoke(c[1], c[2])
+end, false)
+
+RegisterCommand('smokestop', function()
+    stopSmoke()
+    lib.notify({ type = 'info', description = 'Effect stopped.' })
+end, false)
+
 AddEventHandler('onResourceStop', function(res)
-    if res == cache.resource then deleteCurrent() end
+    if res == cache.resource then
+        deleteCurrent()
+        stopSmoke()
+    end
 end)
 
 print('[propcheck] loaded — /prop /propdel /propinfo /proplist /propnext /propprev')
