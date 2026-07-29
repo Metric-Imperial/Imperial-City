@@ -74,12 +74,18 @@ ImperialSideJobs = {
                 label = 'Coal Seam',
                 prop = `prop_boulder_coal`,  -- imperial_assets
                 item = 'coal', count = { 2, 3 },
-                blips = {},  -- vec3(2958.0, 2798.0, 41.0)
+                blips = {},  -- vec3(2996.6, 2779.2, 42.6)
                 nodes = {
-                    vec3(2962.74, 2802.94, 40.60),
-                    vec3(2946.45, 2810.49, 40.79),
-                    vec3(2953.64, 2795.85, 39.93),
-                    vec3(2971.36, 2788.50, 38.77),
+                    vec3(2987.58, 2811.27, 43.88),
+                    vec3(2991.54, 2805.18, 43.23),
+                    vec3(2996.04, 2800.11, 42.85),
+                    vec3(3005.52, 2779.25, 42.47),
+                    vec3(3005.04, 2772.39, 42.01),
+                    vec3(3003.63, 2760.87, 42.12),
+                    vec3(3001.94, 2758.09, 42.32),
+                    vec3(2992.08, 2750.68, 42.69),
+                    vec3(2991.30, 2773.17, 41.94),
+                    vec3(2991.46, 2781.22, 42.60),
                 },
             },
             copper = {
@@ -104,11 +110,13 @@ ImperialSideJobs = {
                     vec3(-593.19, 2096.31, 130.54),
                     vec3(-599.52, 2091.06, 130.50),
                     vec3(-590.98, 2095.23, 131.10),
-                    vec3(-589.55, 2054.24, 129.35),
                     vec3(-594.51, 2078.39, 130.44),
                     vec3(-590.30, 2072.81, 130.29),
                     vec3(-591.28, 2065.47, 130.13),
                     vec3(-588.09, 2061.84, 129.83),
+                    -- Duplicates spawn two boulders inside each other and two
+                    -- overlapping target zones: mine one and an identical rock
+                    -- is still standing there. This coordinate appeared twice.
                     vec3(-589.55, 2054.24, 129.35),
                 },
             },
