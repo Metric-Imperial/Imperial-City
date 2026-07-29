@@ -362,45 +362,95 @@ local function startSmoke(index)
         0.0, 0.0, 0.0, cfg.scale or 1.0, false, false, false)
 end
 
-local function smeltAt(index, recipe)
+local SMELT_MESSAGES = {
+    nofuel   = 'The furnace needs more coal.',
+    noore    = 'Not enough ore for that batch.',
+    busy     = 'This furnace is already running a batch.',
+    noorder  = 'Nothing in this furnace.',
+    capacity = 'Your bags are full.',
+    cooldown = 'Let it cool a moment.',
+    toofar   = 'You are too far from the furnace.',
+}
+
+---Load the furnace with a batch and walk away.
+---
+---Smelting used to be a fixed 6s progress bar for a single ingot. Batching it
+---means the wait scales with what you put in, so a big load is set-and-forget
+---rather than something you stand and watch -- which is also what makes the
+---per-furnace batch limit a meaningful difference between a free public
+---furnace and a crafted private one.
+local function loadFurnace(index, recipe)
     local cfg = ImperialSideJobs.smelting
+    local site = cfg.sites[index]
 
-    if (exports.ox_inventory:GetItemCount(recipe.input) or 0) < recipe.count then
-        return lib.notify({ type = 'error',
-            description = ('You need %d %s.'):format(recipe.count, recipe.input) })
-    end
-    if (exports.ox_inventory:GetItemCount(cfg.fuel.item) or 0) < cfg.fuel.count then
-        return lib.notify({ type = 'error',
-            description = ('The furnace needs %s to burn.'):format(cfg.fuel.item) })
+    local ore = exports.ox_inventory:GetItemCount(recipe.input) or 0
+    local coal = exports.ox_inventory:GetItemCount(cfg.fuel.item) or 0
+    local cap = site.maxPerBatch or cfg.defaultMaxPerBatch
+
+    -- Most units this player could actually run right now.
+    local most = math.min(cap, math.floor(ore / recipe.count),
+                          math.floor(coal / cfg.fuel.perUnit))
+    if most < 1 then
+        return lib.notify({ type = 'error', description = ore < recipe.count
+            and SMELT_MESSAGES.noore or SMELT_MESSAGES.nofuel })
     end
 
+    local input = lib.inputDialog(('Smelt %s'):format(recipe.output), {
+        {
+            type = 'number',
+            label = ('How many %s?'):format(recipe.output),
+            default = most, min = 1, max = most,
+            description = ('%d %s + %d coal each, %d min each (max %d here)')
+                :format(recipe.count, recipe.input, cfg.fuel.perUnit,
+                        math.floor(cfg.smeltTimeSecPerUnit / 60), cap),
+        },
+    })
+    if not input or not input[1] then return end
+    local units = input[1]
+
+    -- No skill check here. Loading a furnace is not a moment of dexterity, and
+    -- with batches of up to 50 the interesting decision is how much to commit
+    -- and how long to be away -- not whether you hit a key in time.
     local finished = lib.progressBar({
-        duration = cfg.smeltTimeMs,
-        label = ('Smelting %s…'):format(recipe.input),
+        duration = 4000,
+        label = 'Loading the furnace…',
         canCancel = true,
         disable = { move = true, combat = true },
         anim = { dict = 'amb@prop_human_bbq@male@base', clip = 'base' },
     })
     if not finished then return end
 
-    -- Bellows work: a missed check wastes the fuel but not the ore.
-    local passed = lib.skillCheck(cfg.skillCheck, cfg.skillCheckKeys)
-
-    local ok, extra = lib.callback.await('imperial_sidejobs:smelt', false,
-        index, recipe.input, passed == true)
+    local ok, extra = lib.callback.await('imperial_sidejobs:smelt:start', false,
+        index, recipe.input, units)
     if ok then
-        lib.notify({ type = 'success',
-            description = ('+%d %s'):format(extra.count, extra.item) })
+        lib.notify({
+            type = 'success',
+            title = 'Furnace loaded',
+            description = ('%d %s in about %d minutes.')
+                :format(extra.units, extra.output, math.ceil(extra.seconds / 60)),
+            duration = 10000,
+        })
     else
-        local messages = {
-            nofuel = 'The furnace has gone cold.',
-            noore = 'Not enough ore.',
-            ruined = 'The pour was botched — the fuel is spent.',
-            capacity = 'Your bags are full.',
-            cooldown = 'Let it cool a moment.',
-            toofar = 'You are too far from the furnace.',
-        }
-        lib.notify({ type = 'error', description = messages[extra] or 'Nothing gained.' })
+        lib.notify({ type = 'error',
+            description = SMELT_MESSAGES[extra] or 'Nothing gained.' })
+    end
+end
+
+local function collectFurnace(index)
+    local ok, extra, remaining = lib.callback.await(
+        'imperial_sidejobs:smelt:collect', false, index)
+    if ok then
+        lib.notify({ type = 'success', title = 'Pulled from the furnace',
+            description = ('+%d %s'):format(extra.count, extra.item),
+            duration = 8000 })
+    elseif extra == 'notready' then
+        lib.notify({ type = 'error', title = 'Still smelting',
+            description = ('About %d minutes to go.')
+                :format(math.ceil((remaining or 0) / 60)),
+            duration = 8000 })
+    else
+        lib.notify({ type = 'error',
+            description = SMELT_MESSAGES[extra] or 'Nothing to collect.' })
     end
 end
 
@@ -418,9 +468,18 @@ CreateThread(function()
                 name = ('imperial_smelt_%d_%s'):format(index, recipe.input),
                 label = ('Smelt %s → %s'):format(recipe.input, recipe.output),
                 icon = 'fa-solid fa-fire',
-                onSelect = function() smeltAt(index, recipe) end,
+                canInteract = function()
+                    return (exports.ox_inventory:GetItemCount(recipe.input) or 0) >= recipe.count
+                end,
+                onSelect = function() loadFurnace(index, recipe) end,
             }
         end
+        options[#options + 1] = {
+            name = ('imperial_smelt_%d_collect'):format(index),
+            label = 'Empty the furnace',
+            icon = 'fa-solid fa-hand-holding',
+            onSelect = function() collectFurnace(index) end,
+        }
 
         exports.ox_target:addSphereZone({
             coords = coords,
@@ -789,4 +848,78 @@ CreateThread(function()
             end,
         },
     })
+end)
+
+-- ── Mine access ─────────────────────────────────────────────────────────
+--
+-- A short teleport through a rock face. The entrance and exit markers sit less
+-- than a metre apart -- two sides of the same wall -- so both would otherwise
+-- be in reach at once and the player would see "Enter" and "Leave" together.
+--
+-- Each option is gated on whether the player is currently inside, so only the
+-- one that applies is ever offered. That state is client-side on purpose: it is
+-- presentation, nothing is rewarded for being inside, so there is nothing worth
+-- cheating and no reason to spend a server round trip on it.
+
+local insideMine = {}   -- [index] = true while underground
+
+local function teleport(spawn)
+    DoScreenFadeOut(400)
+    while not IsScreenFadedOut() do Wait(0) end
+
+    local ped = cache.ped
+    SetEntityCoordsNoOffset(ped, spawn.x, spawn.y, spawn.z, false, false, false)
+    SetEntityHeading(ped, spawn.w or 0.0)
+
+    -- The destination is inside geometry that may not be resident yet. Walking
+    -- into an unloaded world drops you through the map, so wait for the collision
+    -- around the new position before handing control back.
+    local deadline = GetGameTimer() + 5000
+    RequestCollisionAtCoord(spawn.x, spawn.y, spawn.z)
+    while not HasCollisionLoadedAroundEntity(ped) and GetGameTimer() < deadline do
+        RequestCollisionAtCoord(spawn.x, spawn.y, spawn.z)
+        Wait(0)
+    end
+
+    DoScreenFadeIn(400)
+end
+
+CreateThread(function()
+    local mines = ImperialSideJobs.mineAccess
+    if not mines then return end
+
+    for index, mine in ipairs(mines) do
+        insideMine[index] = false
+        local radius = mine.radius or 1.0
+
+        exports.ox_target:addSphereZone({
+            coords = mine.enter.target,
+            radius = radius,
+            options = { {
+                name = ('imperial_mine_enter_%d'):format(index),
+                label = ('Enter %s'):format(mine.label),
+                icon = 'fa-solid fa-person-through-window',
+                canInteract = function() return not insideMine[index] end,
+                onSelect = function()
+                    teleport(mine.enter.spawn)
+                    insideMine[index] = true
+                end,
+            } },
+        })
+
+        exports.ox_target:addSphereZone({
+            coords = mine.exit.target,
+            radius = radius,
+            options = { {
+                name = ('imperial_mine_exit_%d'):format(index),
+                label = ('Leave %s'):format(mine.label),
+                icon = 'fa-solid fa-arrow-right-from-bracket',
+                canInteract = function() return insideMine[index] end,
+                onSelect = function()
+                    teleport(mine.exit.spawn)
+                    insideMine[index] = false
+                end,
+            } },
+        })
+    end
 end)

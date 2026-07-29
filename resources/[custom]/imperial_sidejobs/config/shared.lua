@@ -104,6 +104,12 @@ ImperialSideJobs = {
                     vec3(-593.19, 2096.31, 130.54),
                     vec3(-599.52, 2091.06, 130.50),
                     vec3(-590.98, 2095.23, 131.10),
+                    vec3(-589.55, 2054.24, 129.35),
+                    vec3(-594.51, 2078.39, 130.44),
+                    vec3(-590.30, 2072.81, 130.29),
+                    vec3(-591.28, 2065.47, 130.13),
+                    vec3(-588.09, 2061.84, 129.83),
+                    vec3(-589.55, 2054.24, 129.35),
                 },
             },
             gem = {
@@ -135,6 +141,7 @@ ImperialSideJobs = {
         --
         -- Ground is rarely dead flat, so nudging z by a few centimetres after
         -- looking at it is normal and expected.
+        -- `maxPerBatch` may be set per site; it falls back to defaultMaxPerBatch.
         sites = {
             -- Copper site (captured heading 319.0)
             { coords = vec3(-1019.25, 2901.78, 5.14), heading = 319.0 },
@@ -160,12 +167,27 @@ ImperialSideJobs = {
             renderDistance = 40.0,
         },
 
-        -- Ore in, metal out. Fuel is consumed per smelt, which is what gives
-        -- coal a second use beyond selling it raw.
-        smeltTimeMs = 6000,
-        fuel = { item = 'coal', count = 1 },
-        skillCheck = { 'easy', 'medium' },
-        skillCheckKeys = { '1', '2', '3', '4' },
+        -- Ore in, metal out. Fuel is consumed per unit, which is what gives coal
+        -- a second use beyond selling it raw.
+        --
+        -- Smelting is a BATCH: you choose how many ingots to run, load the
+        -- furnace, and come back. Time scales with the batch, so a big load is
+        -- genuinely set-and-forget rather than a long progress bar you have to
+        -- stand and watch.
+        --
+        -- Batch size is left generous and the risk sits with the player: ore and
+        -- coal are committed the moment the furnace is loaded, and the wait
+        -- scales with the load, so a 50-unit batch is a real decision rather
+        -- than a free win. Per-site `maxPerBatch` overrides this.
+        --
+        -- Player-crafted smelters will differ from these by consuming durability
+        -- per unit, not by being larger.
+        defaultMaxPerBatch = 50,
+        smeltTimeSecPerUnit = 90,
+        fuel = { item = 'coal', perUnit = 1 },
+
+        -- count/yield are PER UNIT. A batch of 3 iron runs this three times:
+        -- 6 iron_ore and 3 coal in, 3 iron out, 270 seconds.
         recipes = {
             { input = 'iron_ore',   count = 2, output = 'iron',   yield = 1 },
             { input = 'copper_ore', count = 2, output = 'copper', yield = 1 },
@@ -242,6 +264,27 @@ ImperialSideJobs = {
         casePickupMs = 6000,
         minPoliceForRobbery = 2, -- robbing the case handled by criminal suite hooks
         blip = { sprite = 477, colour = 5 },
+    },
+
+    -- ── Mine access (teleport through the rock face) ────────────────────
+    -- The entrance and exit targets are only 0.93m apart, being two sides of
+    -- the same wall. Rather than move them, each is gated on whether the player
+    -- is currently inside: you only ever see the one that applies. State is
+    -- client-side because it is presentation only -- nothing is rewarded for
+    -- being inside, so there is nothing to cheat.
+    mineAccess = {
+        {
+            label = 'Iron Mine',
+            enter = {
+                target = vec3(-596.06, 2089.02, 131.41),
+                spawn  = vec4(-595.57, 2086.11, 131.41, 191.64),
+            },
+            exit = {
+                target = vec3(-595.95, 2088.10, 131.35),
+                spawn  = vec4(-596.26, 2089.42, 131.41, 5.67),
+            },
+            radius = 1.0,   -- small: the two targets are less than a metre apart
+        },
     },
 
     -- ── Jeweller (uncut_gem → cut stones, over real time) ───────────────

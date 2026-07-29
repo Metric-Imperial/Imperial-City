@@ -31,6 +31,14 @@ local function wearTool(src, item, percent)
     return true
 end
 
+---Character id for persistence keys. Defined up here with the other helpers
+---because both smelting and the jeweller call it -- a `local` declared further
+---down the file is nil at the point the earlier callback runs.
+local function citizenOf(src)
+    local player = exports.qbx_core:GetPlayer(src)
+    return player and player.PlayerData and player.PlayerData.citizenid or nil
+end
+
 local function pay(src, amount, reason)
     local player = exports.qbx_core:GetPlayer(src)
     if not player then return false end
@@ -150,7 +158,29 @@ lib.callback.register('imperial_sidejobs:gather', function(src, kind, index, gro
 end)
 
 -- ── Smelting ────────────────────────────────────────────────────────────
-lib.callback.register('imperial_sidejobs:smelt', function(src, index, input, skillPassed)
+--
+-- A batch, not a single ingot. Ore and coal go in now, metal comes out later,
+-- so the order outlives the interaction and has to be persisted -- same reason
+-- as the jeweller. Schema in sql/014_smelting.sql; also created here so a
+-- running server needs no hand-applied migration.
+CreateThread(function()
+    MySQL.query.await([[
+        CREATE TABLE IF NOT EXISTS `imperial_smelt_orders` (
+          `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+          `citizenid` VARCHAR(50) NOT NULL,
+          `site` INT UNSIGNED NOT NULL,
+          `output` VARCHAR(64) NOT NULL,
+          `count` INT UNSIGNED NOT NULL,
+          `ready_at` INT UNSIGNED NOT NULL,
+          `collected` TINYINT(1) NOT NULL DEFAULT 0,
+          `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          PRIMARY KEY (`id`),
+          KEY `idx_smelt_citizen` (`citizenid`, `site`, `collected`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    ]])
+end)
+
+lib.callback.register('imperial_sidejobs:smelt:start', function(src, index, input, units)
     if not exports.imperial_logging:RateLimit(src, 'sidejob:smelt', 6, 30000) then
         return false, 'cooldown'
     end
@@ -159,42 +189,101 @@ lib.callback.register('imperial_sidejobs:smelt', function(src, index, input, ski
     local cfg = ImperialSideJobs.smelting
     local site = cfg.sites[index]
     if not site then return false, 'invalid' end
-    -- Sites carry a heading as well as coords, so the position is site.coords.
     if not exports.imperial_logging:ValidateDistance(src, site.coords, 5.0) then
         return false, 'toofar'
     end
 
-    -- Recipe is looked up by input item, never taken from the client. The
-    -- client only says which ore it fed in.
+    -- Recipe looked up by input item; the client only says which ore it fed in.
     local recipe
     for _, r in ipairs(cfg.recipes) do
         if r.input == input then recipe = r break end
     end
     if not recipe then return false, 'invalid' end
 
-    if (exports.ox_inventory:Search(src, 'count', cfg.fuel.item) or 0) < cfg.fuel.count then
-        return false, 'nofuel'
-    end
-    if (exports.ox_inventory:Search(src, 'count', recipe.input) or 0) < recipe.count then
+    -- Batch size is clamped server-side. The client's number is a request.
+    local cap = site.maxPerBatch or cfg.defaultMaxPerBatch
+    units = math.floor(tonumber(units) or 0)
+    if units < 1 then return false, 'noore' end
+    units = math.min(units, cap)
+
+    local citizenid = citizenOf(src)
+    if not citizenid then return false, 'invalid' end
+
+    -- One batch per player per furnace: two people can run the same furnace at
+    -- once, which matters for a public one, but nobody can queue up five.
+    local pending = MySQL.scalar.await(
+        'SELECT id FROM imperial_smelt_orders WHERE citizenid = ? AND site = ? AND collected = 0 LIMIT 1',
+        { citizenid, index })
+    if pending then return false, 'busy' end
+
+    local needOre = recipe.count * units
+    local needFuel = cfg.fuel.perUnit * units
+    if (exports.ox_inventory:Search(src, 'count', recipe.input) or 0) < needOre then
         return false, 'noore'
     end
-    if not exports.ox_inventory:CanCarryItem(src, recipe.output, recipe.yield) then
-        return false, 'capacity'
+    if (exports.ox_inventory:Search(src, 'count', cfg.fuel.item) or 0) < needFuel then
+        return false, 'nofuel'
     end
 
-    -- Fuel burns whether or not the pour lands. A botched smelt costs the coal
-    -- but keeps the ore, so failure stings without being punishing.
-    exports.ox_inventory:RemoveItem(src, cfg.fuel.item, cfg.fuel.count)
-    if skillPassed ~= true then return false, 'ruined' end
+    -- Ore first: if it cannot be taken there is nothing to smelt, and taking the
+    -- fuel first would burn coal for a batch that never starts.
+    if not exports.ox_inventory:RemoveItem(src, recipe.input, needOre) then
+        return false, 'noore'
+    end
+    exports.ox_inventory:RemoveItem(src, cfg.fuel.item, needFuel)
 
-    exports.ox_inventory:RemoveItem(src, recipe.input, recipe.count)
-    exports.ox_inventory:AddItem(src, recipe.output, recipe.yield)
+    local seconds = cfg.smeltTimeSecPerUnit * units
+    MySQL.insert.await(
+        'INSERT INTO imperial_smelt_orders (citizenid, site, output, count, ready_at) VALUES (?, ?, ?, ?, ?)',
+        { citizenid, index, recipe.output, recipe.yield * units, os.time() + seconds })
 
     exports.imperial_logging:Log({
         resource = 'imperial_sidejobs', category = 'craft',
-        action = 'smelt-' .. recipe.output, source = src, amount = recipe.yield,
+        action = 'smelt-start-' .. recipe.output, source = src, amount = units,
     })
-    return true, { item = recipe.output, count = recipe.yield }
+    return true, { units = units, output = recipe.output, seconds = seconds }
+end)
+
+lib.callback.register('imperial_sidejobs:smelt:collect', function(src, index)
+    if type(index) ~= 'number' then return false, 'invalid' end
+
+    local cfg = ImperialSideJobs.smelting
+    local site = cfg.sites[index]
+    if not site then return false, 'invalid' end
+    if not exports.imperial_logging:ValidateDistance(src, site.coords, 5.0) then
+        return false, 'toofar'
+    end
+
+    local citizenid = citizenOf(src)
+    if not citizenid then return false, 'invalid' end
+
+    local order = MySQL.single.await(
+        'SELECT id, output, count, ready_at FROM imperial_smelt_orders WHERE citizenid = ? AND site = ? AND collected = 0 LIMIT 1',
+        { citizenid, index })
+    if not order then return false, 'noorder' end
+
+    local now = os.time()
+    if order.ready_at > now then
+        return false, 'notready', order.ready_at - now
+    end
+
+    if not exports.ox_inventory:CanCarryItem(src, order.output, order.count) then
+        return false, 'capacity'
+    end
+
+    -- Claimed before handing over, guarded on collected = 0, so a double-click
+    -- cannot pay out twice.
+    local claimed = MySQL.update.await(
+        'UPDATE imperial_smelt_orders SET collected = 1 WHERE id = ? AND collected = 0',
+        { order.id })
+    if not claimed or claimed < 1 then return false, 'noorder' end
+
+    exports.ox_inventory:AddItem(src, order.output, order.count)
+    exports.imperial_logging:Log({
+        resource = 'imperial_sidejobs', category = 'craft',
+        action = 'smelt-collect-' .. order.output, source = src, amount = order.count,
+    })
+    return true, { item = order.output, count = order.count }
 end)
 
 lib.callback.register('imperial_sidejobs:getDepleted', function(_)
@@ -406,11 +495,6 @@ CreateThread(function()
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     ]])
 end)
-
-local function citizenOf(src)
-    local player = exports.qbx_core:GetPlayer(src)
-    return player and player.PlayerData and player.PlayerData.citizenid or nil
-end
 
 lib.callback.register('imperial_sidejobs:jeweller:submit', function(src, count)
     if not exports.imperial_logging:RateLimit(src, 'sidejob:jeweller', 4, 30000) then

@@ -14,9 +14,14 @@ the right tools, and qbx_cityhall remains the formal employment office.
   returns after 60s (server-tracked, synced to all clients). No map blips —
   sites are meant to be found.
 - **Smelting** — fixed smelters at the copper and iron sites turn
-  `iron_ore`/`copper_ore` into `iron`/`copper`, 2:1, burning 1 coal each. Custom
-  `imperial_smelter` prop with an emissive firebox and looped chimney smoke;
-  prop and particle effect both stream with player distance.
+  `iron_ore`/`copper_ore` into `iron`/`copper`, 2:1, 1 coal per ingot. Batched
+  and timed (90s/ingot): ore and coal are committed up front, then collected
+  later, so it persists across logout and restart. One batch per player per
+  furnace. Custom `imperial_smelter` prop with an emissive firebox and looped
+  chimney smoke; prop and particle effect both stream with player distance.
+- **Mine access** — teleport through the rock face at the iron site. Entrance
+  and exit markers are under a metre apart, so each is gated on whether the
+  player is inside and only the applicable one is ever shown.
 - **Jeweller** — ped on Portola Drive cuts `uncut_gem` into `emerald_gem` over
   real time (5 min/stone, $75/stone, 10 max). Orders live in
   `imperial_jeweller_orders` so they survive logout and server restarts.
@@ -42,7 +47,10 @@ the right tools, and qbx_cityhall remains the formal employment office.
 - [ ] Two miners on one node: second gets 'depleted'.
 - [ ] Failed mining skill check leaves the node workable; tool still wears.
 - [ ] Mining with full bags does not burn the node.
-- [ ] Smelt with no coal rejected; failed pour costs fuel but keeps the ore.
+- [ ] Smelt batch clamps to the lowest of ore, coal and the furnace cap.
+- [ ] Second batch in the same furnace rejected while one is pending.
+- [ ] Smelt order survives a server restart and is still collectable.
+- [ ] Mine entrance and exit never offer both options at once.
 - [ ] Jeweller: second batch while one is pending rejected ('busy').
 - [ ] Jeweller: collect before ready reports remaining time, pays nothing.
 - [ ] Jeweller order survives a server restart and is still collectable.

@@ -84,6 +84,8 @@ tasks:
     file: ./tmp/imperial/sql/012_third_party_gaps.sql
   - action: query_database
     file: ./tmp/imperial/sql/013_jeweller.sql
+  - action: query_database
+    file: ./tmp/imperial/sql/014_smelting.sql
 
   # ───────────────────────── CFX defaults ─────────────────────────
   - action: download_github
