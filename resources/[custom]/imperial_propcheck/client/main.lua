@@ -9,6 +9,7 @@
 --- /propinfo       print the current prop's model and real-world size
 --- /proplist       list the built-in candidate models (validated)
 --- /furnlist       list the shell furnishing models with sizes (validated)
+--- /shellpoint <n> capture your position as an offset from the spawned shell
 --- /propnext       cycle forward through the candidate list
 --- /propprev       cycle back through the candidate list
 --- /nodehere       capture a bare vec3 (rocks, trees -- no facing)
@@ -89,6 +90,7 @@ local FURNITURE = {
     -- collision. These must report collision=loaded.
     'imperial_wardrobe',
     'imperial_dresser',
+    'imperial_bed',
 
     'imperial_shell_test',             -- our own shell; must pass
 }
@@ -207,6 +209,49 @@ RegisterCommand('propinfo', function()
     print(('[propcheck]   coords vec3(%.2f, %.2f, %.2f)'):format(c.x, c.y, c.z))
     lib.notify({ type = 'info', title = currentModel,
         description = ('%.2f x %.2f x %.2f m — full detail in F8'):format(s.x, s.y, s.z),
+        duration = 8000 })
+end, false)
+
+--- Capture where you are standing as an OFFSET from the spawned shell's origin.
+---
+--- qbx_properties' `interiors` config takes offsets, not world coords: see
+--- CalculateOffsetCoords in its shared/main.lua, which adds them to the property
+--- coords. So a raw /nodehere reading is the wrong shape for a shell.
+---
+--- The shell's origin is the centre of its walkable floor, so a point at floor
+--- level should come out with z ~ 0, which is what every existing entry uses.
+RegisterCommand('shellpoint', function(_, args)
+    if not current or not DoesEntityExist(current) then
+        lib.notify({ type = 'error', description = 'Spawn the shell first: /prop <shell>' })
+        return
+    end
+
+    -- Offsets are only a plain subtraction while the shell is axis-aligned. If it
+    -- were ever spawned rotated, the delta would need rotating back into the
+    -- shell's own frame, so refuse rather than emit a wrong number.
+    local shellHeading = GetEntityHeading(current)
+    if math.abs((shellHeading + 180.0) % 360.0 - 180.0) > 0.5 then
+        lib.notify({ type = 'error',
+            description = ('Shell is rotated %.1f deg. Respawn it unrotated.'):format(shellHeading) })
+        return
+    end
+
+    local label = args[1] or 'point'
+    local origin = GetEntityCoords(current)
+    local ped = cache.ped
+    local here = GetEntityCoords(ped)
+    local o = here - origin
+    local heading = GetEntityHeading(ped)
+
+    print(('[propcheck] shell point %q relative to %s'):format(label, currentModel))
+    print(('[propcheck]   %s = vec3(%.2f, %.2f, %.2f)'):format(label, o.x, o.y, o.z))
+    print(('[propcheck]   with heading: vec4(%.2f, %.2f, %.2f, %.2f)')
+        :format(o.x, o.y, o.z, heading))
+    if math.abs(o.z) > 0.25 then
+        print(('[propcheck]   note: z is %.2f, not ~0 -- are you on the shell floor?'):format(o.z))
+    end
+    lib.notify({ type = 'success', title = label,
+        description = ('vec3(%.2f, %.2f, %.2f) — full detail in F8'):format(o.x, o.y, o.z),
         duration = 8000 })
 end, false)
 

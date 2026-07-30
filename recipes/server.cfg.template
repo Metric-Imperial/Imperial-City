@@ -126,6 +126,10 @@ ensure imperial_sidejobs
 ensure imperial_fire
 ensure imperial_mdt
 
+# Housing shell support: suppresses outdoor rain/snow inside prop shells by
+# using Renewed-Weathersync's own per-player syncWeather override.
+ensure imperial_shells
+
 # Dev tool: prop picker for choosing models for activity sites (/prop, /propnext).
 # Client-side and non-networked. Remove this line to disable.
 ensure imperial_propcheck

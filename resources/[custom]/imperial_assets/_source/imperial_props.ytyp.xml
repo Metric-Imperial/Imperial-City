@@ -76,18 +76,20 @@
     </Item>
     <!-- Housing shell, not an MLO. qbx_properties spawns interiors with
          CreateObjectNoOffset 50m below the world, so a shell is an ordinary
-         drawable archetype. Bounds are the OUTER shell (8.4 x 6.4 x 3.2); the
-         clear interior is 8 x 6 x 2.8 with the floor surface at z = 0, which is
-         the origin qbx_properties' interior offsets are measured from.
+         drawable archetype. Bounds are the OUTER shell (8.4 x 5.4 x 3.2); the
+         clear interior is 8 x 5 x 2.8 with the floor surface at z = 0, which is
+         the origin qbx_properties' interior offsets are measured from. The
+         wardrobes, dresser and bed are BAKED IN, so the room arrives furnished
+         and its interaction offsets are computed rather than measured.
          Built by _work/mlo/shell/build_shell.py, which prints these numbers. -->
     <Item type="CBaseArchetypeDef">
       <lodDist value="150.00000000"/>
       <flags value="32"/>
       <specialAttribute value="0"/>
-      <bbMin x="-4.20000000" y="-3.20000000" z="-0.20000000"/>
-      <bbMax x="4.20000000" y="3.20000000" z="3.00000000"/>
+      <bbMin x="-4.20000000" y="-2.70000000" z="-0.20000000"/>
+      <bbMax x="4.20000000" y="2.70000000" z="3.00000000"/>
       <bsCentre x="0.00000000" y="0.00000000" z="1.40000010"/>
-      <bsRadius value="5.51724530"/>
+      <bsRadius value="5.24310000"/>
       <hdTextureDist value="100.00000000"/>
       <name>imperial_shell_test</name>
       <textureDictionary/>
@@ -139,6 +141,24 @@
       <physicsDictionary>imperial_props</physicsDictionary>
       <assetType>ASSET_TYPE_DRAWABLE</assetType>
       <assetName>imperial_dresser</assetName>
+      <extensions/>
+    </Item>
+    <Item type="CBaseArchetypeDef">
+      <lodDist value="60.00000000"/>
+      <flags value="32"/>
+      <specialAttribute value="0"/>
+      <bbMin x="-0.83000000" y="-1.10000000" z="0.00000000"/>
+      <bbMax x="0.83000000" y="1.08000000" z="1.12000000"/>
+      <bsCentre x="0.00000000" y="-0.01000000" z="0.56000000"/>
+      <bsRadius value="1.48007000"/>
+      <hdTextureDist value="60.00000000"/>
+      <name>imperial_bed</name>
+      <textureDictionary/>
+      <clipDictionary/>
+      <drawableDictionary/>
+      <physicsDictionary>imperial_props</physicsDictionary>
+      <assetType>ASSET_TYPE_DRAWABLE</assetType>
+      <assetName>imperial_bed</assetName>
       <extensions/>
     </Item>
 
