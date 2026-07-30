@@ -60,10 +60,10 @@
       <lodDist value="60.00000000"/>
       <flags value="32"/>
       <specialAttribute value="0"/>
-      <bbMin x="-0.75000000" y="-0.64000005" z="0.00000000"/>
-      <bbMax x="0.75000000" y="0.60000000" z="1.43000000"/>
-      <bsCentre x="0.00000000" y="-0.02000001" z="0.71500000"/>
-      <bsRadius value="1.20752850"/>
+      <bbMin x="-0.49952000" y="-0.40158000" z="0.00000000"/>
+      <bbMax x="0.49952000" y="0.40158000" z="1.43000000"/>
+      <bsCentre x="0.00000000" y="0.00000000" z="0.71500000"/>
+      <bsRadius value="0.94814000"/>
       <hdTextureDist value="60.00000000"/>
       <name>imperial_smelter</name>
       <textureDictionary/>
@@ -147,10 +147,10 @@
       <lodDist value="60.00000000"/>
       <flags value="32"/>
       <specialAttribute value="0"/>
-      <bbMin x="-0.83000000" y="-1.10000000" z="0.00000000"/>
-      <bbMax x="0.83000000" y="1.08000000" z="1.12000000"/>
-      <bsCentre x="0.00000000" y="-0.01000000" z="0.56000000"/>
-      <bsRadius value="1.48007000"/>
+      <bbMin x="-0.90282000" y="-1.00000000" z="0.00000000"/>
+      <bbMax x="0.90282000" y="1.00000000" z="0.96208000"/>
+      <bsCentre x="0.00000000" y="0.00000000" z="0.48104000"/>
+      <bsRadius value="1.41052000"/>
       <hdTextureDist value="60.00000000"/>
       <name>imperial_bed</name>
       <textureDictionary/>
