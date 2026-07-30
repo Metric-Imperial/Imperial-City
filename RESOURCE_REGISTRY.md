@@ -26,7 +26,7 @@ for licence details.
 - **Notes**: Grant claimed in KV before granting, so a starter package can never be issued twice to the same character.
 
 ### imperial_sidejobs
-- **Role**: Session-based civilian side jobs — fishing, mining, lumber, construction, secure transport, materials buyer.
+- **Role**: Session-based civilian side jobs — fishing, mining, smelting, lumber, jeweller, materials buyer.
 - **Dependencies**: qbx_core, ox_lib, ox_target, ox_inventory, imperial_logging
 - **Design note**: Never calls `SetJob` — purely session/in-memory state, so side jobs never pollute a player's framework job.
 

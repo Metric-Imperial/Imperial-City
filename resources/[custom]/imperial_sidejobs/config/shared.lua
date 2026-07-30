@@ -9,13 +9,57 @@ ImperialSideJobs = {
         castCooldownMs = 8000,
         baitPerCast = 1,
         rodWearPercent = 2,
+
+        -- Rod held for both the cast and the wait. Same bone and same tuning
+        -- story as the pickaxe: bone 28422 = IK_R_Hand, edit pos/rot here and
+        -- restart the resource. rot is (pitch, roll, yaw) in degrees.
+        -- Starting at zero deliberately: the pickaxe's numbers do not carry over
+        -- to a different model's origin, so this wants one look in-game and a
+        -- nudge, exactly as the axe did.
+        rodProp = { model = `prop_fishing_rod_01`, pos = vec3(0.0, 0.0, 0.0), rot = vec3(0.0, 0.0, 0.0) },
+
+        -- The cast, played once before the wait. GTA V ships no dedicated
+        -- fishing-cast clip, so this is a tennis forehand -- the same
+        -- substitution every fishing script ends up making, because it reads as
+        -- a rod being swung out over the water and nothing else in the game does.
+        -- Swap dict/clip here if a better one turns up; /prop in
+        -- imperial_propcheck is the quickest way to eyeball a candidate.
+        castAnim = { dict = 'mini@tennis', clip = 'forehand_ts_md_far' },
+        castDurationMs = 1400,
+
+        -- The wait: rod out, line in the water, until the skill check resolves.
+        anim = { dict = 'amb@world_human_stand_fishing@idle_a', clip = 'idle_c' },
         catchTable = {           -- server-side weighted results
             { item = 'fish', count = { 1, 2 }, weight = 70 },
             { item = 'fish', count = { 2, 3 }, weight = 20 },
             { item = nil, weight = 10 },  -- got away
         },
         skillCheck = { 'easy', 'medium' },
+        -- Number row, matching mining and lumber. The default WASD prompts fight
+        -- the movement keys and read as letters mid-animation.
+        skillCheckKeys = { '1', '2', '3', '4' },
         blip = { sprite = 68, colour = 3 },
+    },
+
+    -- ── Mine access (teleport through the rock face) ────────────────────
+    -- The entrance and exit targets are only 0.93m apart, being two sides of
+    -- the same wall. Rather than move them, each is gated on whether the player
+    -- is currently inside: you only ever see the one that applies. State is
+    -- client-side because it is presentation only -- nothing is rewarded for
+    -- being inside, so there is nothing to cheat.
+    mineAccess = {
+        {
+            label = 'Iron Mine',
+            enter = {
+                target = vec3(-596.06, 2089.02, 131.41),
+                spawn  = vec4(-595.57, 2086.11, 131.41, 191.64),
+            },
+            exit = {
+                target = vec3(-595.95, 2088.10, 131.35),
+                spawn  = vec4(-596.26, 2089.42, 131.41, 5.67),
+            },
+            radius = 1.0,   -- small: the two targets are less than a metre apart
+        },
     },
 
     -- ── Mining ──────────────────────────────────────────────────────────
@@ -243,57 +287,10 @@ ImperialSideJobs = {
         blip = { coords = vec3(-565.0, 5258.0, 71.0), sprite = 285, colour = 25, label = 'Logging Camp' },
     },
 
-    -- ── Construction ────────────────────────────────────────────────────
-    construction = {
-        site = { coords = vec3(-141.5, -947.5, 29.4), radius = 60.0, label = 'City Construction Site' },
-        pickup = vec3(-127.9, -964.7, 29.4),
-        dropoffs = {
-            vec3(-158.6, -939.6, 29.4),
-            vec3(-146.2, -925.0, 29.4),
-            vec3(-170.9, -955.3, 29.4),
-        },
-        carryProp = `prop_cementbags01`,
-        tasksPerShift = 10,
-        blip = { sprite = 566, colour = 47 },
-    },
-
-    -- ── Secure transport (Gruppe 6-style) ───────────────────────────────
-    securetransport = {
-        depot = vec4(11.9, -1060.4, 29.8, 340.0),
-        vehicleModel = `stockade`,
-        stops = {
-            vec3(-56.5, -1752.3, 29.4),   -- convenience store
-            vec3(147.4, -1035.8, 29.3),   -- fleeca legion
-            vec3(-1211.7, -336.5, 37.8),  -- fleeca vinewood
-            vec3(-2957.5, 481.9, 15.7),   -- banham
-            vec3(1175.0, 2711.5, 38.1),   -- route 68
-        },
-        stopsPerRun = 3,
-        casePickupMs = 6000,
-        minPoliceForRobbery = 2, -- robbing the case handled by criminal suite hooks
-        blip = { sprite = 477, colour = 5 },
-    },
-
-    -- ── Mine access (teleport through the rock face) ────────────────────
-    -- The entrance and exit targets are only 0.93m apart, being two sides of
-    -- the same wall. Rather than move them, each is gated on whether the player
-    -- is currently inside: you only ever see the one that applies. State is
-    -- client-side because it is presentation only -- nothing is rewarded for
-    -- being inside, so there is nothing to cheat.
-    mineAccess = {
-        {
-            label = 'Iron Mine',
-            enter = {
-                target = vec3(-596.06, 2089.02, 131.41),
-                spawn  = vec4(-595.57, 2086.11, 131.41, 191.64),
-            },
-            exit = {
-                target = vec3(-595.95, 2088.10, 131.35),
-                spawn  = vec4(-596.26, 2089.42, 131.41, 5.67),
-            },
-            radius = 1.0,   -- small: the two targets are less than a metre apart
-        },
-    },
+    -- Construction and secure transport used to live here. Both were dropped:
+    -- neither produced anything the crafting chain could use -- unlike fish,
+    -- ore and logs -- and city hall already covers wage work. Removed rather
+    -- than commented out; the git history has them if they are ever wanted back.
 
     -- ── Jeweller (uncut_gem → cut stones, over real time) ───────────────
     -- Cutting is NOT instant. You hand rough stones over and come back later,

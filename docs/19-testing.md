@@ -54,9 +54,9 @@ them together, plus scenarios that only show up with two or more players.
 
 ## Job / business tests
 
-- [ ] Civilian side jobs (fishing/mining/lumber/construction/secure
-      transport) pay out correctly and cannot be re-triggered faster than
-      their configured rate limits.
+- [ ] Civilian side jobs (fishing/mining/smelting/lumber/jeweller) pay out
+      correctly and cannot be re-triggered faster than their configured rate
+      limits.
 - [ ] `GetBusiness`/`IsBusinessEmployee`/`HasBusinessPermission` return
       correct values for owner, manager, and regular-employee ranks.
 - [ ] POS charge: customer confirmation is required; an expired invoice
@@ -114,9 +114,8 @@ them together, plus scenarios that only show up with two or more players.
       rejects invalid input without side effects (see the `RegisterNetEvent`
       table in `docs/18-security.md`).
 - [ ] A player disconnects mid-flow in each multi-step system (crafting,
-      boosting, secure transport, business POS as the customer) — no
-      dangling lock, no partial resource consumption, no orphaned server
-      state left behind.
+      boosting, business POS as the customer) — no dangling lock, no partial
+      resource consumption, no orphaned server state left behind.
 
 ## Sign-off
 

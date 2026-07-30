@@ -15,8 +15,8 @@ Phase 10 — Recipe and Documentation (complete). **All 10 phases complete — r
   first-party qbx_core + qbx_spawn (no custom code needed), `imperial_character`
   (duplicate-proof starter package via KV-claim-before-grant, server-validated
   spawn rescue).
-- **Phase 4 — Civilian Economy**: `imperial_sidejobs` (fishing/mining/lumber/
-  construction/secure-transport/materials-buyer, session-based, no framework
+- **Phase 4 — Civilian Economy**: `imperial_sidejobs` (fishing/mining/smelting/
+  lumber/jeweller/materials-buyer, session-based, no framework
   job-state pollution), `imperial_crafting` (bench/recipe framework covering
   general + criminal categories from one config-driven authority).
 - **Phase 5 — Businesses & Properties**: `imperial_businesses` (ownership,

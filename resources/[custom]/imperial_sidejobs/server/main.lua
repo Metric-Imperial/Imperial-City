@@ -1,10 +1,8 @@
 --- imperial_sidejobs/server/main.lua
---- Server authority for all side-job rewards. Node depletion, construction
---- shift state and transport runs are tracked server-side; disconnects clean up.
+--- Server authority for all side-job rewards. Node depletion is tracked
+--- server-side and respawns on a timer.
 
 local depletedNodes = {}   -- ['mining:3'] = respawnAtEpoch
-local shifts = {}          -- construction: [src] = { tasksDone, currentDrop, carrying }
-local runs = {}            -- transport:   [src] = { stops = {...}, collected, vehicleNetId, plate }
 
 local function weightedPick(tbl)
     local total = 0
@@ -295,136 +293,6 @@ lib.callback.register('imperial_sidejobs:getDepleted', function(_)
     return out
 end)
 
--- ── Construction ────────────────────────────────────────────────────────
-lib.callback.register('imperial_sidejobs:construction:start', function(src)
-    if shifts[src] then return false, 'active' end
-    local cfg = ImperialSideJobs.construction
-    if not exports.imperial_logging:ValidateDistance(src, cfg.pickup, 60.0) then return false, 'toofar' end
-    shifts[src] = { tasksDone = 0, carrying = false, currentDrop = math.random(#cfg.dropoffs) }
-    return true, shifts[src].currentDrop
-end)
-
-lib.callback.register('imperial_sidejobs:construction:pickup', function(src)
-    local shift = shifts[src]
-    if not shift or shift.carrying then return false end
-    if not exports.imperial_logging:ValidateDistance(src, ImperialSideJobs.construction.pickup, 4.0) then
-        return false
-    end
-    shift.carrying = true
-    return true, shift.currentDrop
-end)
-
-lib.callback.register('imperial_sidejobs:construction:deliver', function(src)
-    local shift = shifts[src]
-    local cfg = ImperialSideJobs.construction
-    if not shift or not shift.carrying then return false end
-    local drop = cfg.dropoffs[shift.currentDrop]
-    if not exports.imperial_logging:ValidateDistance(src, drop, 4.0) then return false end
-
-    shift.carrying = false
-    shift.tasksDone = shift.tasksDone + 1
-    local wage = GetConvarInt('imperial:econ:pay:construction_task', 45)
-    pay(src, wage, 'imperial-construction-task')
-
-    if shift.tasksDone >= cfg.tasksPerShift then
-        shifts[src] = nil
-        local bonus = GetConvarInt('imperial:econ:pay:construction_bonus', 150)
-        pay(src, bonus, 'imperial-construction-shift-bonus')
-        return true, { done = true, wage = wage, bonus = bonus }
-    end
-    shift.currentDrop = math.random(#cfg.dropoffs)
-    return true, { done = false, wage = wage, next = shift.currentDrop }
-end)
-
--- ── Secure transport ────────────────────────────────────────────────────
-lib.callback.register('imperial_sidejobs:transport:start', function(src)
-    if runs[src] then return false, 'active' end
-    if not exports.imperial_logging:AcquireLock(src, 'sidejob:transport', 30 * 60000) then
-        return false, 'active'
-    end
-    local cfg = ImperialSideJobs.securetransport
-    if not exports.imperial_logging:ValidateDistance(src,
-        vec3(cfg.depot.x, cfg.depot.y, cfg.depot.z), 40.0) then
-        exports.imperial_logging:ReleaseLock(src, 'sidejob:transport')
-        return false, 'toofar'
-    end
-
-    -- pick unique stops
-    local pool, chosen = {}, {}
-    for i = 1, #cfg.stops do pool[i] = i end
-    for _ = 1, math.min(cfg.stopsPerRun, #pool) do
-        local pick = table.remove(pool, math.random(#pool))
-        chosen[#chosen + 1] = pick
-    end
-
-    -- server-spawned vehicle with keys
-    local veh = CreateVehicleServerSetter(cfg.vehicleModel, 'automobile',
-        cfg.depot.x, cfg.depot.y, cfg.depot.z, cfg.depot.w)
-    local timeout = 0
-    while not DoesEntityExist(veh) and timeout < 50 do Wait(50) timeout = timeout + 1 end
-    if not DoesEntityExist(veh) then
-        exports.imperial_logging:ReleaseLock(src, 'sidejob:transport')
-        return false, 'novehicle'
-    end
-    local plate = ('SEC%04d'):format(math.random(9999))
-    SetVehicleNumberPlateText(veh, plate)
-    local netId = NetworkGetNetworkIdFromEntity(veh)
-
-    runs[src] = { stops = chosen, collected = 0, vehicleNetId = netId, plate = plate }
-    TriggerClientEvent('vehiclekeys:client:SetOwner', src, plate)
-
-    exports.imperial_logging:Log({
-        resource = 'imperial_sidejobs', category = 'gameplay',
-        action = 'transport_started', source = src, data = { stops = chosen, plate = plate },
-    })
-    return true, { stops = chosen, netId = netId }
-end)
-
-lib.callback.register('imperial_sidejobs:transport:collect', function(src, stopIndex)
-    local run = runs[src]
-    if not run then return false end
-    local cfg = ImperialSideJobs.securetransport
-
-    local expected = run.stops[run.collected + 1]
-    if stopIndex ~= expected then return false, 'wrongstop' end
-    if not exports.imperial_logging:ValidateDistance(src, cfg.stops[stopIndex], 6.0) then return false end
-
-    run.collected = run.collected + 1
-    return true, { collected = run.collected, total = #run.stops }
-end)
-
-local function endRun(src, completed)
-    local run = runs[src]
-    if not run then return end
-    runs[src] = nil
-    exports.imperial_logging:ReleaseLock(src, 'sidejob:transport')
-    local veh = NetworkGetEntityFromNetworkId(run.vehicleNetId)
-    if veh and DoesEntityExist(veh) then DeleteEntity(veh) end
-    if completed then
-        local cfg = ImperialSideJobs.securetransport
-        local perStop = GetConvarInt('imperial:econ:pay:transport_stop', 120)
-        local amount = perStop * run.collected
-        pay(src, amount, 'imperial-secure-transport')
-    end
-end
-
-lib.callback.register('imperial_sidejobs:transport:finish', function(src)
-    local run = runs[src]
-    if not run then return false end
-    local cfg = ImperialSideJobs.securetransport
-    if not exports.imperial_logging:ValidateDistance(src,
-        vec3(cfg.depot.x, cfg.depot.y, cfg.depot.z), 30.0) then
-        return false, 'notatdepot'
-    end
-    if run.collected < 1 then
-        endRun(src, false)
-        return false, 'nothing'
-    end
-    local collected = run.collected
-    endRun(src, true)
-    return true, collected
-end)
-
 -- ── Materials buyer ─────────────────────────────────────────────────────
 lib.callback.register('imperial_sidejobs:sellMaterials', function(src, item, count)
     local cfg = ImperialSideJobs.buyer
@@ -450,15 +318,9 @@ lib.callback.register('imperial_sidejobs:sellMaterials', function(src, item, cou
 end)
 
 -- ── cleanup ─────────────────────────────────────────────────────────────
-AddEventHandler('playerDropped', function()
-    local src = source
-    shifts[src] = nil
-    endRun(src, false)
-end)
-AddEventHandler('QBCore:Server:OnPlayerUnload', function(src)
-    shifts[src] = nil
-    endRun(src, false)
-end)
+-- Nothing to unwind per player any more: every remaining job either resolves
+-- inside the interaction or persists in the database, so a disconnect leaves no
+-- in-memory session behind.
 
 -- prune depleted-node table hourly
 CreateThread(function()

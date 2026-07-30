@@ -58,8 +58,8 @@ fabrication bench. That `type` is an imperial_businesses category label and has
 no dependency on the qbx_core `mechanic` job.
 
 ## Imperial side jobs (session-based, no job-state change)
-See `imperial_sidejobs` README: fishing, mining, lumber, construction,
-secure transport, plus a materials buyer. These deliberately do **not** call
+See `imperial_sidejobs` README: fishing, mining, smelting, lumber and the
+jeweller, plus a materials buyer. These deliberately do **not** call
 `SetJob` — a player keeps their primary employment while working them, per
 the master requirement that starter/side activities must not pollute job
 state. `qbx_cityhall` remains the place a player formally changes jobs.

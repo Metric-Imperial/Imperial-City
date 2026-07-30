@@ -94,7 +94,7 @@ deposits/withdrawals, turf contest declarations) is rate-limited via
 client reconnect with a new server id.
 
 **Locks** — multi-step flows that must not be re-entered concurrently by the
-same player (crafting, boosting contracts, secure transport, farm harvest)
+same player (crafting, boosting contracts, farm harvest)
 use `imperial_logging:AcquireLock`/`ReleaseLock` with a TTL safety net, so a
 crashed client or a dropped connection mid-flow can't permanently wedge a
 player out of the action (the lock expires) and can't be double-fired by

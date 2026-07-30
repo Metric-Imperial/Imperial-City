@@ -22,7 +22,7 @@ place to rebalance the whole server's economy without touching any Lua.
 | Category | Convars (see `economy.cfg` for current defaults) |
 |---|---|
 | Starter package | `starterCash`, `starterBank`, `starterApartmentRentPerWeek` |
-| Civilian job payouts | `pay:garbage`, `pay:taxi_per_km`, `pay:tow`, `pay:trucking`, `pay:bus_route`, `pay:postal`, `pay:recycle`, `pay:mining_ore/stone/coal`, `pay:lumber_log/plank`, `pay:fishing_fish`, `pay:construction_task/bonus`, `pay:transport_stop`, `pay:produce_box`, `pay:fire_incident` |
+| Civilian job payouts | `pay:garbage`, `pay:taxi_per_km`, `pay:tow`, `pay:trucking`, `pay:bus_route`, `pay:postal`, `pay:recycle`, `pay:mining_ore/stone/coal`, `pay:lumber_log/plank`, `pay:fishing_fish`, `pay:produce_box`, `pay:fire_incident` |
 | Emergency salaries | `salary:police_base`, `salary:ems_base`, `salary:fire_base` |
 | Business | `business:registrationFee`, `business:transactionTaxPct`, `business:defaultWage` |
 | Gangs & turfs | `gang:creationFee`, `turf:incomePerCycle` |

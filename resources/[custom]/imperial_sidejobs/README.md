@@ -27,10 +27,6 @@ the right tools, and qbx_cityhall remains the formal employment office.
   `imperial_jeweller_orders` so they survive logout and server restarts.
 - **Lumber** — felling axe at logging camp; logs → planks at the sawmill bench
   (imperial_crafting `saw_planks`).
-- **Construction** — carry-materials task loop with per-task wage + shift bonus.
-- **Secure transport** — server-spawned armoured van, randomised multi-stop
-  case collection in enforced order, payout on depot return. Vehicle deleted
-  and lock released on completion, abandon, or disconnect.
 - **Materials buyer** — sells fish/ore/timber for convar-priced cash
   (`imperial:econ:pay:*`).
 
@@ -38,12 +34,11 @@ the right tools, and qbx_cityhall remains the formal employment office.
 - Every reward path is a server callback with distance validation, tool checks,
   rate limits and audit logs. Catch/ore tables and prices are server-only.
 - Node depletion is authoritative server state — clients only render it.
-- Transport stops must be collected in the server-chosen order; payout counts
-  only server-confirmed collections.
-- Disconnect/unload clears shifts and runs, deletes the run vehicle.
 
 ## Test checklist
 - [ ] Fishing outside spots rejected + logged; bait consumed per cast.
+- [ ] Fishing plays the cast swing then the wait idle, rod in hand throughout.
+- [ ] Fishing skill check prompts are 1-4, not letters.
 - [ ] Two miners on one node: second gets 'depleted'.
 - [ ] Failed mining skill check leaves the node workable; tool still wears.
 - [ ] Mining with full bags does not burn the node.
@@ -54,6 +49,4 @@ the right tools, and qbx_cityhall remains the formal employment office.
 - [ ] Jeweller: second batch while one is pending rejected ('busy').
 - [ ] Jeweller: collect before ready reports remaining time, pays nothing.
 - [ ] Jeweller order survives a server restart and is still collectable.
-- [ ] Construction deliver without pickup rejected.
-- [ ] Transport payout equals collected stops only; abandoning pays nothing.
 - [ ] Selling clamps to owned count; convar prices honoured.

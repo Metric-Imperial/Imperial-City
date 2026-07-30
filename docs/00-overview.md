@@ -18,8 +18,8 @@ fill every gap the free ecosystem doesn't already cover well.
   Renewed-Weathersync.
 - **Civilian economy**: the full set of first-party qbx job resources (taxi,
   trucker, tow, garbage, bus, news, recycling, mechanic, diving) plus
-  `imperial_sidejobs` (fishing, mining, lumber, construction, secure
-  transport) and `imperial_crafting` (a single config-driven bench/recipe
+  `imperial_sidejobs` (fishing, mining, smelting, lumber, jeweller,
+  materials buyer) and `imperial_crafting` (a single config-driven bench/recipe
   framework covering both general and criminal crafting).
 - **Player-owned businesses**: `imperial_businesses` — ownership, employees
   and ranks, point-of-sale, wages, lease billing, and a documented,
