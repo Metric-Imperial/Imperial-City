@@ -74,6 +74,370 @@
       <assetName>imperial_smelter</assetName>
       <extensions/>
     </Item>
+    <!-- Housing shell, not an MLO. qbx_properties spawns interiors with
+         CreateObjectNoOffset 50m below the world, so a shell is an ordinary
+         drawable archetype. Bounds are the OUTER shell (8.4 x 6.4 x 3.2); the
+         clear interior is 8 x 6 x 2.8 with the floor surface at z = 0, which is
+         the origin qbx_properties' interior offsets are measured from.
+         Built by _work/mlo/shell/build_shell.py, which prints these numbers. -->
+    <Item type="CBaseArchetypeDef">
+      <lodDist value="150.00000000"/>
+      <flags value="32"/>
+      <specialAttribute value="0"/>
+      <bbMin x="-4.20000000" y="-3.20000000" z="-0.20000000"/>
+      <bbMax x="4.20000000" y="3.20000000" z="3.00000000"/>
+      <bsCentre x="0.00000000" y="0.00000000" z="1.40000010"/>
+      <bsRadius value="5.51724530"/>
+      <hdTextureDist value="100.00000000"/>
+      <name>imperial_shell_test</name>
+      <textureDictionary/>
+      <clipDictionary/>
+      <drawableDictionary/>
+      <physicsDictionary>imperial_props</physicsDictionary>
+      <assetType>ASSET_TYPE_DRAWABLE</assetType>
+      <assetName>imperial_shell_test</assetName>
+      <extensions/>
+    </Item>
+
+    <!-- Furniture built for the shells, because GTA's own interior furniture
+         cannot be used: its props carry no standalone collision (an MLO's
+         composite bounds cover its furniture), so a re-declared archetype
+         renders a ghost you walk through. These collide properly.
+         Bounds are the exact values printed by
+         _work/mlo/furniture/build_furniture.py, not estimates. -->
+    <Item type="CBaseArchetypeDef">
+      <lodDist value="60.00000000"/>
+      <flags value="32"/>
+      <specialAttribute value="0"/>
+      <bbMin x="-0.62000000" y="-0.35200000" z="0.00000000"/>
+      <bbMax x="0.62000000" y="0.33000000" z="2.10000000"/>
+      <bsCentre x="0.00000000" y="-0.01100000" z="1.05000000"/>
+      <bsRadius value="1.26617000"/>
+      <hdTextureDist value="60.00000000"/>
+      <name>imperial_wardrobe</name>
+      <textureDictionary/>
+      <clipDictionary/>
+      <drawableDictionary/>
+      <physicsDictionary>imperial_props</physicsDictionary>
+      <assetType>ASSET_TYPE_DRAWABLE</assetType>
+      <assetName>imperial_wardrobe</assetName>
+      <extensions/>
+    </Item>
+    <Item type="CBaseArchetypeDef">
+      <lodDist value="60.00000000"/>
+      <flags value="32"/>
+      <specialAttribute value="0"/>
+      <bbMin x="-0.57000000" y="-0.27800000" z="0.00000000"/>
+      <bbMax x="0.57000000" y="0.26000000" z="0.80000000"/>
+      <bsCentre x="0.00000000" y="-0.00900000" z="0.40000000"/>
+      <bsRadius value="0.74650000"/>
+      <hdTextureDist value="60.00000000"/>
+      <name>imperial_dresser</name>
+      <textureDictionary/>
+      <clipDictionary/>
+      <drawableDictionary/>
+      <physicsDictionary>imperial_props</physicsDictionary>
+      <assetType>ASSET_TYPE_DRAWABLE</assetType>
+      <assetName>imperial_dresser</assetName>
+      <extensions/>
+    </Item>
+
+    <!-- ===================================================================
+         Archetypes for EXISTING BASEGAME props, not for assets we built.
+
+         Most GTA interior furniture is absent from the global model index:
+         its archetype is declared inside the owning interior's .ytyp (the
+         extracted v_int_40.ytyp holds 75 `v_40_*` archetypes for the hospital
+         alone) and that ytyp is only resident when its MLO is. So
+         IsModelInCdimage returns false and /prop reports "Invalid model" even
+         though the name is right and the asset is in the game files.
+
+         Declaring the archetype ourselves puts the name back in the index. The
+         drawable and its textures are already streamable; only the archetype
+         record was missing. This mirrors exactly how the hospital's own ytyp
+         declares them: ASSET_TYPE_DRAWABLE, assetName == name, no
+         drawableDictionary. physicsDictionary is left EMPTY, unlike our own
+         props: their collision lives in the game files, not in imperial_props.
+
+         Two values here are deliberately provisional:
+
+         * textureDictionary is EMPTY, to test whether these props carry their
+           textures embedded in the .ydr. If one spawns untextured, its txd name
+           (Forge lists it, e.g. the hospital props all share
+           'v_40_hospital_txd') goes in here.
+         * bounds are generous placeholders. A prop still spawns with wrong
+           bounds, which only drive culling, so an over-large box is harmless
+           while an under-large one pops out of view at odd angles. Spawn each
+           one, read the true size off /propinfo, then tighten these.
+
+         Caveat worth knowing: if one of these interiors ever DOES load nearby,
+         two archetypes will exist for the same name. That is tolerated, but
+         ours would be the wrong-bounds one, so tighten them before shipping.
+         =================================================================== -->
+
+    <!-- Furniture-sized: generous 4x4x3m box. -->
+    <Item type="CBaseArchetypeDef">
+      <lodDist value="100.00000000"/>
+      <flags value="32"/>
+      <specialAttribute value="0"/>
+      <bbMin x="-2.00000000" y="-2.00000000" z="0.00000000"/>
+      <bbMax x="2.00000000" y="2.00000000" z="3.00000000"/>
+      <bsCentre x="0.00000000" y="0.00000000" z="1.50000000"/>
+      <bsRadius value="3.20000000"/>
+      <hdTextureDist value="60.00000000"/>
+      <name>v_res_tre_wardrobe</name>
+      <textureDictionary/>
+      <clipDictionary/>
+      <drawableDictionary/>
+      <physicsDictionary/>
+      <assetType>ASSET_TYPE_DRAWABLE</assetType>
+      <assetName>v_res_tre_wardrobe</assetName>
+      <extensions/>
+    </Item>
+    <Item type="CBaseArchetypeDef">
+      <lodDist value="100.00000000"/>
+      <flags value="32"/>
+      <specialAttribute value="0"/>
+      <bbMin x="-2.00000000" y="-2.00000000" z="0.00000000"/>
+      <bbMax x="2.00000000" y="2.00000000" z="3.00000000"/>
+      <bsCentre x="0.00000000" y="0.00000000" z="1.50000000"/>
+      <bsRadius value="3.20000000"/>
+      <hdTextureDist value="60.00000000"/>
+      <name>sf_int1_bdr_bed</name>
+      <textureDictionary/>
+      <clipDictionary/>
+      <drawableDictionary/>
+      <physicsDictionary/>
+      <assetType>ASSET_TYPE_DRAWABLE</assetType>
+      <assetName>sf_int1_bdr_bed</assetName>
+      <extensions/>
+    </Item>
+    <Item type="CBaseArchetypeDef">
+      <lodDist value="100.00000000"/>
+      <flags value="32"/>
+      <specialAttribute value="0"/>
+      <bbMin x="-2.00000000" y="-2.00000000" z="0.00000000"/>
+      <bbMax x="2.00000000" y="2.00000000" z="3.00000000"/>
+      <bsCentre x="0.00000000" y="0.00000000" z="1.50000000"/>
+      <bsRadius value="3.20000000"/>
+      <hdTextureDist value="60.00000000"/>
+      <name>v_24_lnb_mesh_sideboard</name>
+      <textureDictionary/>
+      <clipDictionary/>
+      <drawableDictionary/>
+      <physicsDictionary/>
+      <assetType>ASSET_TYPE_DRAWABLE</assetType>
+      <assetName>v_24_lnb_mesh_sideboard</assetName>
+      <extensions/>
+    </Item>
+    <Item type="CBaseArchetypeDef">
+      <lodDist value="100.00000000"/>
+      <flags value="32"/>
+      <specialAttribute value="0"/>
+      <bbMin x="-2.00000000" y="-2.00000000" z="0.00000000"/>
+      <bbMax x="2.00000000" y="2.00000000" z="3.00000000"/>
+      <bsCentre x="0.00000000" y="0.00000000" z="1.50000000"/>
+      <bsRadius value="3.20000000"/>
+      <hdTextureDist value="60.00000000"/>
+      <name>v_26_wardrobe</name>
+      <textureDictionary/>
+      <clipDictionary/>
+      <drawableDictionary/>
+      <physicsDictionary/>
+      <assetType>ASSET_TYPE_DRAWABLE</assetType>
+      <assetName>v_26_wardrobe</assetName>
+      <extensions/>
+    </Item>
+
+    <!-- Architectural: doorways and window walls can be far larger than a piece
+         of furniture, so these get an 8x8x4m box. -->
+    <Item type="CBaseArchetypeDef">
+      <lodDist value="150.00000000"/>
+      <flags value="32"/>
+      <specialAttribute value="0"/>
+      <bbMin x="-4.00000000" y="-4.00000000" z="0.00000000"/>
+      <bbMax x="4.00000000" y="4.00000000" z="4.00000000"/>
+      <bsCentre x="0.00000000" y="0.00000000" z="2.00000000"/>
+      <bsRadius value="6.00000000"/>
+      <hdTextureDist value="80.00000000"/>
+      <name>ch_chint09_locker_room_doorway</name>
+      <textureDictionary/>
+      <clipDictionary/>
+      <drawableDictionary/>
+      <physicsDictionary/>
+      <assetType>ASSET_TYPE_DRAWABLE</assetType>
+      <assetName>ch_chint09_locker_room_doorway</assetName>
+      <extensions/>
+    </Item>
+    <Item type="CBaseArchetypeDef">
+      <lodDist value="150.00000000"/>
+      <flags value="32"/>
+      <specialAttribute value="0"/>
+      <bbMin x="-4.00000000" y="-4.00000000" z="0.00000000"/>
+      <bbMax x="4.00000000" y="4.00000000" z="4.00000000"/>
+      <bsCentre x="0.00000000" y="0.00000000" z="2.00000000"/>
+      <bsRadius value="6.00000000"/>
+      <hdTextureDist value="80.00000000"/>
+      <name>ch2_06_windows_iref</name>
+      <textureDictionary/>
+      <clipDictionary/>
+      <drawableDictionary/>
+      <physicsDictionary/>
+      <assetType>ASSET_TYPE_DRAWABLE</assetType>
+      <assetName>ch2_06_windows_iref</assetName>
+      <extensions/>
+    </Item>
+
+    <!-- The furniture qbx_properties' own decorating menu offers players, from
+         its config/client.lua. These are all v_res_* interior props and NONE of
+         them were in the model index, so that menu is partly broken on a stock
+         server: the three v_res_tre_bed* entries are offered and cannot spawn.
+         Declaring them here fixes the upstream catalogue as a side effect, and
+         does so redeploy-safely, since qbx_properties itself is untouched. -->
+    <Item type="CBaseArchetypeDef">
+      <lodDist value="100.00000000"/>
+      <flags value="32"/>
+      <specialAttribute value="0"/>
+      <bbMin x="-2.00000000" y="-2.00000000" z="0.00000000"/>
+      <bbMax x="2.00000000" y="2.00000000" z="3.00000000"/>
+      <bsCentre x="0.00000000" y="0.00000000" z="1.50000000"/>
+      <bsRadius value="3.20000000"/>
+      <hdTextureDist value="60.00000000"/>
+      <name>v_res_tre_sofa_mess_a</name>
+      <textureDictionary/>
+      <clipDictionary/>
+      <drawableDictionary/>
+      <physicsDictionary/>
+      <assetType>ASSET_TYPE_DRAWABLE</assetType>
+      <assetName>v_res_tre_sofa_mess_a</assetName>
+      <extensions/>
+    </Item>
+    <Item type="CBaseArchetypeDef">
+      <lodDist value="100.00000000"/>
+      <flags value="32"/>
+      <specialAttribute value="0"/>
+      <bbMin x="-2.00000000" y="-2.00000000" z="0.00000000"/>
+      <bbMax x="2.00000000" y="2.00000000" z="3.00000000"/>
+      <bsCentre x="0.00000000" y="0.00000000" z="1.50000000"/>
+      <bsRadius value="3.20000000"/>
+      <hdTextureDist value="60.00000000"/>
+      <name>v_res_tre_sofa_mess_b</name>
+      <textureDictionary/>
+      <clipDictionary/>
+      <drawableDictionary/>
+      <physicsDictionary/>
+      <assetType>ASSET_TYPE_DRAWABLE</assetType>
+      <assetName>v_res_tre_sofa_mess_b</assetName>
+      <extensions/>
+    </Item>
+    <Item type="CBaseArchetypeDef">
+      <lodDist value="100.00000000"/>
+      <flags value="32"/>
+      <specialAttribute value="0"/>
+      <bbMin x="-2.00000000" y="-2.00000000" z="0.00000000"/>
+      <bbMax x="2.00000000" y="2.00000000" z="3.00000000"/>
+      <bsCentre x="0.00000000" y="0.00000000" z="1.50000000"/>
+      <bsRadius value="3.20000000"/>
+      <hdTextureDist value="60.00000000"/>
+      <name>v_res_tre_sofa_mess_c</name>
+      <textureDictionary/>
+      <clipDictionary/>
+      <drawableDictionary/>
+      <physicsDictionary/>
+      <assetType>ASSET_TYPE_DRAWABLE</assetType>
+      <assetName>v_res_tre_sofa_mess_c</assetName>
+      <extensions/>
+    </Item>
+    <Item type="CBaseArchetypeDef">
+      <lodDist value="100.00000000"/>
+      <flags value="32"/>
+      <specialAttribute value="0"/>
+      <bbMin x="-2.00000000" y="-2.00000000" z="0.00000000"/>
+      <bbMax x="2.00000000" y="2.00000000" z="3.00000000"/>
+      <bsCentre x="0.00000000" y="0.00000000" z="1.50000000"/>
+      <bsRadius value="3.20000000"/>
+      <hdTextureDist value="60.00000000"/>
+      <name>v_res_fh_diningtable</name>
+      <textureDictionary/>
+      <clipDictionary/>
+      <drawableDictionary/>
+      <physicsDictionary/>
+      <assetType>ASSET_TYPE_DRAWABLE</assetType>
+      <assetName>v_res_fh_diningtable</assetName>
+      <extensions/>
+    </Item>
+    <Item type="CBaseArchetypeDef">
+      <lodDist value="100.00000000"/>
+      <flags value="32"/>
+      <specialAttribute value="0"/>
+      <bbMin x="-2.00000000" y="-2.00000000" z="0.00000000"/>
+      <bbMax x="2.00000000" y="2.00000000" z="3.00000000"/>
+      <bsCentre x="0.00000000" y="0.00000000" z="1.50000000"/>
+      <bsRadius value="3.20000000"/>
+      <hdTextureDist value="60.00000000"/>
+      <name>v_res_j_coffeetable</name>
+      <textureDictionary/>
+      <clipDictionary/>
+      <drawableDictionary/>
+      <physicsDictionary/>
+      <assetType>ASSET_TYPE_DRAWABLE</assetType>
+      <assetName>v_res_j_coffeetable</assetName>
+      <extensions/>
+    </Item>
+    <Item type="CBaseArchetypeDef">
+      <lodDist value="100.00000000"/>
+      <flags value="32"/>
+      <specialAttribute value="0"/>
+      <bbMin x="-2.00000000" y="-2.00000000" z="0.00000000"/>
+      <bbMax x="2.00000000" y="2.00000000" z="3.00000000"/>
+      <bsCentre x="0.00000000" y="0.00000000" z="1.50000000"/>
+      <bsRadius value="3.20000000"/>
+      <hdTextureDist value="60.00000000"/>
+      <name>v_res_tre_bed1</name>
+      <textureDictionary/>
+      <clipDictionary/>
+      <drawableDictionary/>
+      <physicsDictionary/>
+      <assetType>ASSET_TYPE_DRAWABLE</assetType>
+      <assetName>v_res_tre_bed1</assetName>
+      <extensions/>
+    </Item>
+    <Item type="CBaseArchetypeDef">
+      <lodDist value="100.00000000"/>
+      <flags value="32"/>
+      <specialAttribute value="0"/>
+      <bbMin x="-2.00000000" y="-2.00000000" z="0.00000000"/>
+      <bbMax x="2.00000000" y="2.00000000" z="3.00000000"/>
+      <bsCentre x="0.00000000" y="0.00000000" z="1.50000000"/>
+      <bsRadius value="3.20000000"/>
+      <hdTextureDist value="60.00000000"/>
+      <name>v_res_tre_bed2</name>
+      <textureDictionary/>
+      <clipDictionary/>
+      <drawableDictionary/>
+      <physicsDictionary/>
+      <assetType>ASSET_TYPE_DRAWABLE</assetType>
+      <assetName>v_res_tre_bed2</assetName>
+      <extensions/>
+    </Item>
+    <Item type="CBaseArchetypeDef">
+      <lodDist value="100.00000000"/>
+      <flags value="32"/>
+      <specialAttribute value="0"/>
+      <bbMin x="-2.00000000" y="-2.00000000" z="0.00000000"/>
+      <bbMax x="2.00000000" y="2.00000000" z="3.00000000"/>
+      <bsCentre x="0.00000000" y="0.00000000" z="1.50000000"/>
+      <bsRadius value="3.20000000"/>
+      <hdTextureDist value="60.00000000"/>
+      <name>v_res_tre_bed1_messy</name>
+      <textureDictionary/>
+      <clipDictionary/>
+      <drawableDictionary/>
+      <physicsDictionary/>
+      <assetType>ASSET_TYPE_DRAWABLE</assetType>
+      <assetName>v_res_tre_bed1_messy</assetName>
+      <extensions/>
+    </Item>
   </archetypes>
   <name>imperial_props</name>
   <dependencies/>

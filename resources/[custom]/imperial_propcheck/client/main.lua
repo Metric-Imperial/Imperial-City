@@ -8,6 +8,7 @@
 --- /propdel        delete the current prop
 --- /propinfo       print the current prop's model and real-world size
 --- /proplist       list the built-in candidate models (validated)
+--- /furnlist       list the shell furnishing models with sizes (validated)
 --- /propnext       cycle forward through the candidate list
 --- /propprev       cycle back through the candidate list
 --- /nodehere       capture a bare vec3 (rocks, trees -- no facing)
@@ -29,6 +30,67 @@ local CANDIDATES = {
     'prop_rock_6_a', 'prop_rock_7_a',
     'prop_asteroid_01a',
     'xs_terrain_rock_arena_1_01',
+}
+
+-- Candidate furnishing props for the housing shells.
+--
+-- Most GTA interior furniture is NOT in the global model index. A prop whose
+-- name carries an interior-set prefix -- v_24_, v_26_, sf_int1_, ch_, ch2_,
+-- ex_p_mp_ -- has its archetype declared inside that interior's own .ytyp
+-- (v_int_40.ytyp holds 75 such `v_40_*` archetypes for the hospital alone), and
+-- that ytyp is only resident when its MLO is. IsModelInCdimage then returns
+-- false and /prop reports "Invalid model" even though the name is correct and
+-- the asset exists in the game files.
+--
+-- The fix for a prop that fails here is to declare a CBaseArchetypeDef for it in
+-- imperial_props.ytyp, exactly as the interior's own ytyp does -- assetType
+-- ASSET_TYPE_DRAWABLE, assetName the same as the name, and the correct
+-- textureDictionary (the hospital props all share 'v_40_hospital_txd'). Getting
+-- the txd wrong spawns the prop untextured.
+--
+-- /furnlist says which of these need that treatment before any time is spent
+-- guessing. It only reads the index; nothing is spawned.
+local FURNITURE = {
+    -- Wanted for the shell. All but the door failed the first pass.
+    'v_res_tre_wardrobe',              -- wardrobe (x2 side by side)
+    'sf_int1_bdr_bed',                 -- bed
+    'v_24_lnb_mesh_sideboard',         -- dresser
+    'ex_p_mp_door_apart_door_black',   -- door (resolves: 1.30 x 0.23 x 2.30)
+    'ch_chint09_locker_room_doorway',  -- doorway
+    'ch2_06_windows_iref',             -- window
+    'v_26_wardrobe',                   -- control: known to fail
+
+    -- The catalogue qbx_properties' own decorating system offers, from
+    -- config/client.lua. Worth testing as a block: these are the props that
+    -- system expects to be able to spawn, so anything here that FAILS means the
+    -- gap is upstream and not something this shell introduced. Note there is no
+    -- wardrobe or dresser category anywhere in it -- exactly what we need.
+    'ba_prop_battle_lights_wall_l_a',
+    'h4_prop_battle_lights_ceiling_l_c',
+    'apa_mp_h_lit_floorlampnight_07',
+    'apa_mp_h_lit_floorlamp_17',
+    'prop_couch_sm_02',
+    'v_res_tre_sofa_mess_a',
+    'v_res_tre_sofa_mess_b',
+    'v_res_tre_sofa_mess_c',
+    'prop_couch_01',
+    'prop_couch_03',
+    'prop_couch_04',
+    'hei_heist_tab_sidelrg_02',
+    'v_res_fh_diningtable',
+    'v_res_j_coffeetable',
+    'h4_mp_h_yacht_bed_02',
+    'hei_heist_bed_double_08',          -- confirmed in game: collision loads
+    'v_res_tre_bed1',
+    'v_res_tre_bed2',
+    'v_res_tre_bed1_messy',
+
+    -- Built by us because GTA's interior furniture has no standalone
+    -- collision. These must report collision=loaded.
+    'imperial_wardrobe',
+    'imperial_dresser',
+
+    'imperial_shell_test',             -- our own shell; must pass
 }
 
 local current, currentModel, index = nil, nil, 0
@@ -155,6 +217,34 @@ RegisterCommand('proplist', function()
         print(('[propcheck]   %2d %s %s'):format(i, ok and '*' or ' ', m))
     end
     lib.notify({ type = 'info', description = 'Candidate list printed to F8.' })
+end, false)
+
+-- Which furnishing props actually resolve in this build. Reports the model's
+-- real size for the ones that do, so the shell can be dimensioned around them
+-- without spawning anything.
+RegisterCommand('furnlist', function()
+    print('[propcheck] furnishing models (* = in this build):')
+    local ok, fail = 0, 0
+    for _, m in ipairs(FURNITURE) do
+        local hash = joaat(m)
+        local present = IsModelInCdimage(hash) and IsModelValid(hash)
+        local size = ''
+        if present then
+            ok = ok + 1
+            -- GetModelDimensions needs the model loaded to be meaningful.
+            if lib.requestModel(hash, 5000) then
+                local s = modelSize(hash)
+                size = ('  %.2f x %.2f x %.2f m'):format(s.x, s.y, s.z)
+                SetModelAsNoLongerNeeded(hash)
+            else
+                size = '  (indexed but would not load)'
+            end
+        else
+            fail = fail + 1
+        end
+        print(('[propcheck]   %s %-34s%s'):format(present and '*' or ' ', m, size))
+    end
+    print(('[propcheck] %d resolved, %d need a ytyp archetype'):format(ok, fail))
 end, false)
 
 RegisterCommand('propnext', function() cycle(1) end, false)
