@@ -91,13 +91,13 @@
       <bsCentre x="0.00000000" y="0.00000000" z="1.40000010"/>
       <bsRadius value="5.24310000"/>
       <hdTextureDist value="100.00000000"/>
-      <name>imperial_shell_test</name>
+      <name>imperial_furnished_motel_room</name>
       <textureDictionary/>
       <clipDictionary/>
       <drawableDictionary/>
       <physicsDictionary>imperial_props</physicsDictionary>
       <assetType>ASSET_TYPE_DRAWABLE</assetType>
-      <assetName>imperial_shell_test</assetName>
+      <assetName>imperial_furnished_motel_room</assetName>
       <extensions/>
     </Item>
 
@@ -111,10 +111,10 @@
       <lodDist value="60.00000000"/>
       <flags value="32"/>
       <specialAttribute value="0"/>
-      <bbMin x="-0.62000000" y="-0.35200000" z="0.00000000"/>
-      <bbMax x="0.62000000" y="0.33000000" z="2.10000000"/>
-      <bsCentre x="0.00000000" y="-0.01100000" z="1.05000000"/>
-      <bsRadius value="1.26617000"/>
+      <bbMin x="-0.40977000" y="-0.42038000" z="0.00000000"/>
+      <bbMax x="0.40977000" y="0.42038000" z="2.00000000"/>
+      <bsCentre x="0.00000000" y="0.00000000" z="1.00000000"/>
+      <bsRadius value="1.15809000"/>
       <hdTextureDist value="60.00000000"/>
       <name>imperial_wardrobe</name>
       <textureDictionary/>
@@ -129,10 +129,10 @@
       <lodDist value="60.00000000"/>
       <flags value="32"/>
       <specialAttribute value="0"/>
-      <bbMin x="-0.57000000" y="-0.27800000" z="0.00000000"/>
-      <bbMax x="0.57000000" y="0.26000000" z="0.80000000"/>
-      <bsCentre x="0.00000000" y="-0.00900000" z="0.40000000"/>
-      <bsRadius value="0.74650000"/>
+      <bbMin x="-0.52654000" y="-0.31635000" z="0.00000000"/>
+      <bbMax x="0.52654000" y="0.31635000" z="1.39703000"/>
+      <bsCentre x="0.00000000" y="0.00000000" z="0.69851000"/>
+      <bsRadius value="0.87615000"/>
       <hdTextureDist value="60.00000000"/>
       <name>imperial_dresser</name>
       <textureDictionary/>

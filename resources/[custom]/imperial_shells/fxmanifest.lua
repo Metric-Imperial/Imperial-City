@@ -14,4 +14,5 @@ shared_scripts {
 client_scripts {
     '@qbx_core/modules/playerdata.lua',
     'client/weather.lua',
+    'client/dressing.lua',
 }

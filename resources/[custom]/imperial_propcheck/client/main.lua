@@ -92,7 +92,7 @@ local FURNITURE = {
     'imperial_dresser',
     'imperial_bed',
 
-    'imperial_shell_test',             -- our own shell; must pass
+    'imperial_furnished_motel_room',             -- our own shell; must pass
 }
 
 local current, currentModel, index = nil, nil, 0

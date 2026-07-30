@@ -142,6 +142,14 @@ tasks:
     dest: ./resources/[ox]/ox_inventory/data/items.lua
     overwrite: true
 
+  # Housing interiors. qbx_properties is downloaded, so registering an interior
+  # by editing it directly would be wiped on the next deploy. This copies our
+  # whole-file override in, exactly as items.lua and shops.lua are handled above.
+  # The only imperial addition in it is the imperial_furnished_motel_room entry.
+  - action: move_path
+    src: ./tmp/imperial/recipes/qbx_properties_shared.lua
+    dest: ./resources/[housing]/qbx_properties/config/shared.lua
+
   # Shop stock. ox_inventory's default YouTool sells a single lockpick, which
   # left every gathering tool unobtainable: imperial_sidejobs consumed pickaxe /
   # lumber_axe / fishing_bait and imperial_farming consumed seeds, watering_can
