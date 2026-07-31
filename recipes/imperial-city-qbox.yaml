@@ -142,14 +142,6 @@ tasks:
     dest: ./resources/[ox]/ox_inventory/data/items.lua
     overwrite: true
 
-  # Housing interiors. qbx_properties is downloaded, so registering an interior
-  # by editing it directly would be wiped on the next deploy. This copies our
-  # whole-file override in, exactly as items.lua and shops.lua are handled above.
-  # The only imperial addition in it is the imperial_furnished_motel_room entry.
-  - action: move_path
-    src: ./tmp/imperial/recipes/qbx_properties_shared.lua
-    dest: ./resources/[housing]/qbx_properties/config/shared.lua
-
   # Shop stock. ox_inventory's default YouTool sells a single lockpick, which
   # left every gathering tool unobtainable: imperial_sidejobs consumed pickaxe /
   # lumber_axe / fishing_bait and imperial_farming consumed seeds, watering_can
@@ -471,6 +463,21 @@ tasks:
     file: ./resources/[housing]/qbx_properties/property_garages.sql
   - action: query_database
     file: ./resources/[housing]/qbx_properties/decorations.sql
+
+  # Housing interiors. qbx_properties is a downloaded resource, so registering an
+  # interior by editing its config directly would be wiped on the next deploy.
+  # This copies our whole-file override in, the same way items.lua and shops.lua
+  # override ox_inventory's. The only imperial addition in it is the
+  # imperial_furnished_motel_room entry in `interiors`.
+  #
+  # ORDER MATTERS: this MUST come after the download_github above. It was first
+  # written into the OX section ~300 lines earlier, where on a fresh deploy the
+  # destination directory did not exist yet and the download would then have
+  # overwritten it -- the interior would silently never be registered. It only
+  # appeared to work on a machine where qbx_properties was already present.
+  - action: copy_path
+    src: ./tmp/imperial/recipes/qbx_properties_shared.lua
+    dest: ./resources/[housing]/qbx_properties/config/shared.lua
 
   # ───────────────────────── Standalone / world ─────────────────────────
   - action: download_github
