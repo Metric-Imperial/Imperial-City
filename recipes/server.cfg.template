@@ -85,17 +85,23 @@ ensure [qbx]
 ensure [standalone]
 ensure [appearance]
 ensure [voice]
-# Do NOT use `ensure [maps]` here. Resource-category names are matched by folder
-# name anywhere in the tree, and cfx-server-data ships its own
-# [cfx-default]/[gamemodes]/[maps]/ -- so `ensure [maps]` also started
-# fivem-map-hipster/fivem-map-skater, which declare
+# Maps and MLOs live in [mlo], NOT in [maps], and the name is load-bearing.
+#
+# Resource-category names are matched by folder name anywhere in the tree, and
+# cfx-server-data ships its own [cfx-default]/[gamemodes]/[maps]/. So
+# `ensure [maps]` also started fivem-map-hipster/fivem-map-skater, which declare
 # `resource_type 'map' { gameTypes = { ['basic-gamemode'] = true } }` and
 # therefore dragged in the Freeroam gametype. basic-gamemode then calls
 # spawnmanager:setAutoSpawn(true) + forceRespawn() on onClientMapStart, which
-# fights qbx_core's multicharacter spawn flow. Start our map explicitly instead.
-# (The old `stop basic-gamemode` above was a no-op: it ran before the resource
-# had been started, so it stopped nothing.)
-ensure pillbox
+# fights qbx_core's multicharacter spawn flow.
+#
+# Naming our folder [mlo] sidesteps that collision entirely -- nothing in
+# cfx-server-data is called [mlo] -- so the whole category can be ensured at
+# once and any map dropped into it starts without editing this file. That is
+# what the old `ensure pillbox` line could not do.
+# (The `stop basic-gamemode` above is a no-op: it runs before the resource has
+# been started, so it stops nothing. Kept as documentation of the failed fix.)
+ensure [mlo]
 
 # Tier 4: phone
 ensure qbx_npwd

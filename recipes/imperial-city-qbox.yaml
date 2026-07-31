@@ -618,8 +618,10 @@ tasks:
     src: ./tmp/npwd_qbx_mail.zip
 
   # ───────────────────────── Assets ─────────────────────────
+  # [mlo], not [maps]: cfx-server-data ships its own [maps] folder, and category
+  # names match by folder name anywhere in the tree. See server.cfg.template.
   - action: download_github
-    dest: ./resources/[maps]/pillbox
+    dest: ./resources/[mlo]/pillbox
     ref: main
     src: https://github.com/Lorenc95/pillbox
 

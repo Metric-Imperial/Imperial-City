@@ -386,6 +386,120 @@ AddEventHandler('QBCore:Server:OnPlayerUnload', function(src)
     crafting[src] = nil
 end)
 
+-- ── inspection / testing commands ───────────────────────────────────────
+-- Crafting XP is otherwise invisible: it is only ever granted by finishing a
+-- craft and only ever read inside validateRequest, so there was no way to see a
+-- level, and no way to reach a minLevel recipe for testing without grinding one
+-- out. The bench menu does print "Level N", but only for the categories that
+-- bench offers and only once you are standing at it.
+
+local function notify(src, msg, kind)
+    exports.qbx_core:Notify(src, msg, kind or 'inform')
+end
+
+---Every category any recipe actually uses. Guards the admin command against a
+---typo writing XP to a category name that will never be read back.
+local CATEGORIES = {}
+for _, r in ipairs(ImperialCraftingRecipes) do CATEGORIES[r.category] = true end
+
+local function categoryList()
+    local out = {}
+    for c in pairs(CATEGORIES) do out[#out + 1] = c end
+    table.sort(out)
+    return out
+end
+
+---XP needed to reach `level`, inverting levelFor's floor((xp / base) ^ 0.7).
+local function xpForLevel(level)
+    if level <= 0 then return 0 end
+    return math.ceil(ImperialCrafting.xpBase * level ^ (1 / 0.7))
+end
+
+lib.addCommand('craftlevel', {
+    help = 'Show your crafting level and XP in every category',
+}, function(source)
+    local snap = exports.imperial_logging:PlayerSnapshot(source)
+    if not snap then return end
+    loadPlayer(snap.citizenid)
+
+    local lines = {}
+    for _, category in ipairs(categoryList()) do
+        local xp = xpCache[snap.citizenid][category] or 0
+        local level = levelFor(snap.citizenid, category)
+        lines[#lines + 1] = ('%s — level %d (%d xp, next at %d)')
+            :format(category, level, xp, xpForLevel(level + 1))
+    end
+
+    TriggerClientEvent('chat:addMessage', source, {
+        color = { 120, 200, 255 },
+        multiline = true,
+        args = { 'Crafting', table.concat(lines, '\n') },
+    })
+end)
+
+lib.addCommand('setcraftlevel', {
+    help = 'Set a player\'s crafting level in one category (testing)',
+    params = {
+        { name = 'id', type = 'playerId', help = 'Target player' },
+        { name = 'category', type = 'string', help = 'e.g. tools, medical, criminal_tools' },
+        { name = 'level', type = 'number', help = 'Level to set' },
+    },
+    restricted = 'group.admin',
+}, function(source, args)
+    if not CATEGORIES[args.category] then
+        return notify(source, ('Unknown category. Known: %s')
+            :format(table.concat(categoryList(), ', ')), 'error')
+    end
+
+    local snap = exports.imperial_logging:PlayerSnapshot(args.id)
+    if not snap then return notify(source, 'That player is not loaded.', 'error') end
+    loadPlayer(snap.citizenid)
+
+    -- Sets rather than adds. The curve is not linear, so "give me 200 xp" is
+    -- never the question being asked -- "put me on level 2" is.
+    local target = xpForLevel(args.level)
+    xpCache[snap.citizenid][args.category] = target
+    MySQL.query([[
+        INSERT INTO imperial_crafting_xp (citizenid, category, xp) VALUES (?, ?, ?)
+        ON DUPLICATE KEY UPDATE xp = VALUES(xp)
+    ]], { snap.citizenid, args.category, target })
+
+    exports.imperial_logging:Log({
+        resource = 'imperial_crafting', category = 'admin',
+        action = 'craft_level_set', source = source,
+        data = { target = snap.citizenid, category = args.category,
+                 level = args.level, xp = target },
+    })
+
+    notify(source, ('%s is now level %d in %s (%d xp).'):format(
+        snap.citizenid, levelFor(snap.citizenid, args.category), args.category, target), 'success')
+end)
+
+---Grant a blueprint unlock without spawning and using the item, for the four
+---recipes gated on `unlock = 'blueprint'`.
+lib.addCommand('setcraftunlock', {
+    help = 'Grant a blueprint-locked recipe to a player (testing)',
+    params = {
+        { name = 'id', type = 'playerId', help = 'Target player' },
+        { name = 'recipe', type = 'string', help = 'Recipe id, e.g. craft_thermite' },
+    },
+    restricted = 'group.admin',
+}, function(source, args)
+    if not RECIPES[args.recipe] then
+        return notify(source, 'No such recipe id.', 'error')
+    end
+
+    local snap = exports.imperial_logging:PlayerSnapshot(args.id)
+    if not snap then return notify(source, 'That player is not loaded.', 'error') end
+    loadPlayer(snap.citizenid)
+
+    unlockCache[snap.citizenid][args.recipe] = true
+    MySQL.query('INSERT IGNORE INTO imperial_crafting_unlocks (citizenid, recipe_id) VALUES (?, ?)',
+        { snap.citizenid, args.recipe })
+
+    notify(source, ('Unlocked %s for %s.'):format(args.recipe, snap.citizenid), 'success')
+end)
+
 exports('GetLevel', function(citizenid, category) return levelFor(citizenid, category) end)
 exports('HasUnlock', function(citizenid, recipeId)
     loadPlayer(citizenid)

@@ -100,7 +100,7 @@ ImperialCraftingRecipes = {
         minLevel = 2,
     },
 
-    -- ── farming processing ──
+    -- ── farming processing (grain mill: 'processing') ──
     {
         id = 'mill_flour',
         category = 'processing',
@@ -108,15 +108,6 @@ ImperialCraftingRecipes = {
         duration = 6000,
         ingredients = { wheat = 4 },
         output = { flour = 1 },
-        xp = 3,
-    },
-    {
-        id = 'saw_planks',
-        category = 'processing',
-        label = 'Saw Planks',
-        duration = 5000,
-        ingredients = { log = 1 },
-        output = { plank = 2 },
         xp = 3,
     },
     {
@@ -138,6 +129,17 @@ ImperialCraftingRecipes = {
         ingredients = {},
         output = { produce_box = 1 },
         xp = 4,
+    },
+
+    -- ── lumber (sawmill only) ──
+    {
+        id = 'saw_planks',
+        category = 'lumber',
+        label = 'Saw Planks',
+        duration = 5000,
+        ingredients = { log = 1 },
+        output = { plank = 2 },
+        xp = 3,
     },
 
     -- ── criminal tools (hidden benches; see docs/14) ──

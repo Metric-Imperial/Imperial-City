@@ -9,8 +9,8 @@ ImperialCraftingBenches = {
     {
         id = 'public_workbench_paleto',
         label = 'Community Workbench',
-        coords = vec3(-378.35, 6120.25, 31.48),
-        heading = 45.0,
+        coords = vec3(-428.56, 6161.68, 31.48),
+        heading = 225.0,
         prop = `prop_toolchest_05`,
         categories = { 'tools', 'repair', 'camping' },
         blip = { sprite = 566, colour = 5, scale = 0.7 },
@@ -18,7 +18,7 @@ ImperialCraftingBenches = {
     {
         id = 'public_workbench_city',
         label = 'Community Workbench',
-        coords = vec3(717.81, -962.31, 30.4),
+        coords = vec3(704.69, -961.31, 30.4),
         heading = 90.0,
         prop = `prop_toolchest_05`,
         categories = { 'tools', 'repair', 'camping' },
@@ -29,8 +29,8 @@ ImperialCraftingBenches = {
     {
         id = 'mechanic_bench',
         label = 'Mechanic Fabrication Bench',
-        coords = vec3(-347.31, -133.5, 39.01),
-        heading = 250.0,
+        coords = vec3(-345.52, -122.74, 39.01),
+        heading = 340.0,
         prop = `prop_tool_bench02`,
         categories = { 'mechanical', 'repair' },
         restrict = { job = { mechanic = 0 } },
@@ -44,7 +44,13 @@ ImperialCraftingBenches = {
         restrict = { job = { ambulance = 0 } },
     },
 
-    -- Farming processing stations (owned by the farming loop)
+    -- Farming processing stations (owned by the farming loop).
+    --
+    -- The mill and the sawmill deliberately do NOT share a category. Both once
+    -- offered 'processing', and because a bench offers every recipe in its
+    -- categories, that made their menus identical -- you could saw planks at the
+    -- grain mill and mill flour at the sawmill. Timber now has its own 'lumber'
+    -- category so each site only does its own work.
     {
         id = 'grain_mill',
         label = 'Grain Mill',
@@ -56,10 +62,10 @@ ImperialCraftingBenches = {
     {
         id = 'sawmill',
         label = 'Sawmill Bench',
-        coords = vec3(-553.0, 5250.5, 70.2),
-        heading = 0.0,
+        coords = vec3(-554.70, 5329.0, 73.6),
+        heading = 250.0,
         prop = `prop_tool_bench02`,
-        categories = { 'processing' },
+        categories = { 'lumber' },
         blip = { sprite = 566, colour = 25, scale = 0.7 },
     },
     {
@@ -83,7 +89,7 @@ ImperialCraftingBenches = {
     {
         id = 'crim_bench_weapons',
         label = 'Armourer Bench',
-        coords = vec3(997.2, -3200.6, -36.4),
+        coords = vec3(1002.23, -3194.95, -38.99),
         heading = 180.0,
         categories = { 'criminal_weapons' },
         restrict = { hidden = true, gang = { ['*'] = 1 }, item = 'lab_keycard' },
